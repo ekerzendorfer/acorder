@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chord Generator Pro | MIDI & BiaB Export</title>
+    
+    <!-- MidiWriter Library -->
+    <script src="https://unpkg.com/midi-writer-js/browser/index.js"></script>
+    
+    <style>
+        :root {
+            --primary: #2563eb;
+            --secondary: #10b981;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --accent: #f59e0b;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background-color: #f1f5f9;
+            color: var(--dark);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1000px;
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 20px;
+        }
+
+        h1 { margin: 0; color: var(--primary); font-size: 1.8rem; }
+        p { color: #64748b; margin: 5px 0 0; }
+
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        .card {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+        }
+
+        h3 { margin-top: 0; font-size: 1.1rem; display: flex; align-items: center; gap: 8px; }
+
+        label { display: block; font-weight: 600; font-size: 0.85rem; margin-bottom: 5px; color: #475569; }
+        
+        select, input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
+            background: white;
+            font-size: 14px;
+        }
+
+        .block-list { margin-bottom: 15px; }
+        .block-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: white;
+            padding: 8px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .btn {
+            cursor: pointer;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-add { background: var(--primary); color: white; padding: 8px 12px; font-size: 0.9rem; }
+        .btn-gen { background: var(--dark); color: white; width: 100%; padding: 15px; font-size: 1.1rem; margin-top: 20px; }
+        .btn-copy { background: var(--accent); color: white; padding: 10px 20px; }
+        .btn-midi { background: var(--secondary); color: white; padding: 10px 20px; }
+        .btn:hover { opacity: 0.9; transform: translateY(-1px); }
+
+        .output-area {
+            margin-top: 30px;
+            background: #0f172a;
+            color: #10b981;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Fira Code', monospace;
+            white-space: pre-wrap;
+            min-height: 120px;
+            font-size: 1.1rem;
+            line-height: 1.6;
+            border: 4px solid #1e293b;
+        }
+
+        .actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .remove-btn { background: #ef4444; color: white; width: 28px; height: 28px; border-radius: 6px; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Chord Progression Tool</h1>
+        <p>Generiere Akkordfolgen für Ableton & Band-in-a-Box</p>
+    </header>
+
+    <div class="main-grid">
+        <!-- Settings -->
+        <div class="card">
+            <h3>⚙️ Einstellungen</h3>
+            <div style="display: flex; gap: 10px;">
+                <div style="flex: 1;">
+                    <label>Grundton</label>
+                    <select id="rootNote">
+                        <option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option>
+                        <option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option>
+                        <option>A#</option><option>B</option>
+                    </select>
+                </div>
+                <div style="flex: 1;">
+                    <label>Skala</label>
+                    <select id="scaleType">
+                        <option value="major">Dur (Major)</option>
+                        <option value="minor">Moll (Minor)</option>
+                    </select>
+                </div>
+            </div>
+
+            <label>Musikstil (Genre)</label>
+            <select id="genre">
+                <option value="pop">Pop / Radio</option>
+                <option value="acoustic">Acoustic / Songwriter</option>
+                <option value="country">Country</option>
+                <option value="edm">Electronic / EDM</option>
+                <option value="funk">Funk</option>
+                <option value="hiphop">Hip-Hop</option>
+                <option value="rnb">RnB / Neo-Soul</option>
+            </select>
+
+            <label>Komplexität</label>
+            <select id="complexity">
+                <option value="1">Einfach (Dreiklänge)</option>
+                <option value="2">Medium (7th Chords)</option>
+                <option value="3">Komplex (9/11/13 Extensions)</option>
+            </select>
+        </div>
+
+        <!-- Structure -->
+        <div class="card">
+            <h3>🎼 Songstruktur</h3>
+            <div id="structure-list" class="block-list"></div>
+            <button class="btn btn-add" onclick="addBlock()">+ Block hinzufügen</button>
+        </div>
+    </div>
+
+    <button class="btn btn-gen" onclick="generate()">Akkordfolge generieren</button>
+
+    <div id="result-section" style="display: none;">
+        <div id="output" class="output-area"></div>
+        <div class="actions">
+            <button class="btn btn-copy" onclick="copyText()">📋 Für Biab kopieren</button>
+            <button class="btn btn-midi" onclick="exportMidi()">💾 MIDI für Ableton</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const scaleIntervals = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10] };
+    
+    // Harmonische Pfade (Markov-Chain Logik)
+    const genreRules = {
+        pop: { chords: ['I', 'IV', 'V', 'vi'], next: {'I':['IV','V','vi'], 'vi':['IV','V'], 'IV':['I','V'], 'V':['I']} },
+        acoustic: { chords: ['I', 'ii', 'IV', 'V', 'vi'], next: {'I':['ii','vi','IV'], 'vi':['IV','V'], 'ii':['V'], 'IV':['I','V']} },
+        country: { chords: ['I', 'IV', 'V'], next: {'I':['IV','V'], 'IV':['I','V'], 'V':['I']} },
+        edm: { chords: ['i', 'VI', 'III', 'VII'], next: {'i':['VI'], 'VI':['III'], 'III':['VII'], 'VII':['i']} },
+        funk: { chords: ['i', 'IV', 'v7', 'bVII'], next: {'i':['IV','bVII'], 'IV':['i'], 'bVII':['i']} },
+        hiphop: { chords: ['i', 'iv', 'v', 'VI'], next: {'i':['iv','VI'], 'iv':['v','i'], 'VI':['v']} },
+        rnb: { chords: ['i7', 'ii7', 'IVmaj7', 'V7alt'], next: {'i7':['ii7','IVmaj7'], 'ii7':['V7alt'], 'V7alt':['i7']} }
+    };
+
+    let structure = [
+        { type: 'Intro', bars: 4 },
+        { type: 'Verse', bars: 8 },
+        { type: 'Prechorus', bars: 8 },
+        { type: 'Chorus', bars: 8 },
+        { type: 'Ending', bars: 4 }
+    ];
+
+    function renderStructure() {
+        const list = document.getElementById('structure-list');
+        list.innerHTML = '';
+        structure.forEach((block, index) => {
+            list.innerHTML += `
+                <div class="block-item">
+                    <select onchange="updateBlock(${index}, 'type', this.value)" style="width:110px; margin-bottom:0;">
+                        <option ${block.type==='Intro'?'selected':''}>Intro</option>
+                        <option ${block.type==='Verse'?'selected':''}>Verse</option>
+                        <option ${block.type==='Prechorus'?'selected':''}>Prechorus</option>
+                        <option ${block.type==='Chorus'?'selected':''}>Chorus</option>
+                        <option ${block.type==='Bridge'?'selected':''}>Bridge</option>
+                        <option ${block.type==='Ending'?'selected':''}>Ending</option>
+                    </select>
+                    <input type="number" value="${block.bars}" min="1" style="width:50px; margin-bottom:0;" onchange="updateBlock(${index}, 'bars', this.value)">
+                    <span style="font-size: 0.8rem; color: #64748b;">Takte</span>
+                    <button class="remove-btn" onclick="removeBlock(${index})">×</button>
+                </div>`;
+        });
+    }
+
+    function addBlock() { structure.push({ type: 'Verse', bars: 8 }); renderStructure(); }
+    function updateBlock(i, k, v) { structure[i][k] = (k==='bars') ? parseInt(v) : v; }
+    function removeBlock(i) { structure.splice(i, 1); renderStructure(); }
+
+    function getChordInfo(numeral, root, scale, complexity) {
+        const rootIdx = notes.indexOf(root);
+        const intervals = scaleIntervals[scale];
+        const mapping = { 'I':0, 'ii':1, 'iii':2, 'IV':3, 'V':4, 'vi':5, 'vii':6, 'i':0, 'III':2, 'iv':3, 'v':4, 'VI':5, 'VII':6, 'bVII':6 };
+        
+        let step = mapping[numeral.replace('7','').replace('maj','').replace('alt','')] || 0;
+        let noteIdx = (rootIdx + intervals[step]) % 12;
+        let baseNote = notes[noteIdx];
+        
+        let suffix = "";
+        let chordNotes = [0, 4, 7]; // Major Triad
+        if ((scale === 'major' && [1, 2, 5].includes(step)) || (scale === 'minor' && [0, 3, 4].includes(step))) {
+            suffix = "m";
+            chordNotes = [0, 3, 7]; // Minor Triad
+        }
+
+        if (complexity >= 2) {
+            if (numeral.includes('7') || numeral === 'V') { suffix += "7"; chordNotes.push(10); }
+            else if (numeral === 'I' || numeral === 'IV') { suffix += "maj7"; chordNotes.push(11); }
+            else { suffix += "7"; chordNotes.push(10); }
+        }
+        
+        return { name: baseNote + suffix, midiOffsets: chordNotes, rootNote: baseNote };
+    }
+
+    let lastGeneratedProgression = [];
+
+    function generate() {
+        const genre = document.getElementById('genre').value;
+        const root = document.getElementById('rootNote').value;
+        const scale = document.getElementById('scaleType').value;
+        const comp = document.getElementById('complexity').value;
+        const rules = genreRules[genre];
+        
+        let displayTxt = "";
+        lastGeneratedProgression = [];
+
+        structure.forEach(block => {
+            displayTxt += `[${block.type.toUpperCase()}]\n`;
+            let currentNum = rules.chords[Math.floor(Math.random() * rules.chords.length)];
+            let lineChords = [];
+
+            for(let i=0; i<block.bars; i++) {
+                let info = getChordInfo(currentNum, root, scale, comp);
+                lineChords.push(info.name);
+                lastGeneratedProgression.push(info);
+                
+                let possibleNext = rules.next[currentNum] || rules.chords;
+                currentNum = possibleNext[Math.floor(Math.random() * possibleNext.length)];
+            }
+            displayTxt += "| " + lineChords.join(" | ") + " |\n\n";
+        });
+
+        document.getElementById('output').innerText = displayTxt;
+        document.getElementById('result-section').style.display = 'block';
+    }
+
+    async function copyText() {
+        try {
+            await navigator.clipboard.writeText(document.getElementById('output').innerText);
+            alert("Kopiert für Band-in-a-Box!");
+        } catch (err) {
+            alert("Fehler beim Kopieren.");
+        }
+    }
+
+    function exportMidi() {
+        const lib = window.MidiWriter;
+        if (!lib) return;
+
+        const track = new lib.Track();
+        track.setTempo(120);
+
+        lastGeneratedProgression.forEach(chord => {
+            // Generiere MIDI Noten für den ganzen Akkord
+            const pitches = chord.midiOffsets.map(offset => {
+                let rootIdx = notes.indexOf(chord.rootNote);
+                let noteName = notes[(rootIdx + offset) % 12];
+                let octave = 3 + Math.floor((rootIdx + offset) / 12);
+                return noteName + octave;
+            });
+            
+            track.addEvent(new lib.NoteEvent({pitch: pitches, duration: '1'}));
+        });
+
+        const writer = new lib.Writer(track);
+        const data = writer.buildFile();
+        const blob = new Blob([data], {type: 'audio/midi'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "song_progression.mid";
+        a.click();
+    }
+
+    renderStructure();
+</script>
+
+</body>
+</html>
