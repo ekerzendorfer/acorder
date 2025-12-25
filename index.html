@@ -56,143 +56,98 @@
 
     <div id="result-section" style="display:none;">
         <div id="output" class="output-area"></div>
+       <!-- Suche diesen Bereich im HTML und ersetze ihn -->
         <div class="actions">
             <button class="btn-copy" onclick="copyText()">📋 Biab Text</button>
-            <button class="btn-midi" onclick="exportMidi()">💾 MIDI Export</button>
+            <button class="btn-midi" onclick="exportMidi()">💾 Download MIDI</button>
+            <!-- NEU: Der Drag-Button -->
+            <div id="drag-handle" draggable="true" 
+                 style="background: #6366f1; color: white; padding: 10px; border-radius: 6px; cursor: grab; font-weight: bold; flex-grow: 1; text-align: center; border: 2px dashed #4338ca;">
+                 ➔ DRAG TO ABLETON
+            </div>
         </div>
     </div>
 </div>
 
 <script>
-    // --- KONFIGURATION ---
-    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
-    const scaleIntervals = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10] };
-    const genreRules = {
-        pop: { chords: ['I', 'IV', 'V', 'vi'], next: {'I':['IV','V','vi'], 'vi':['IV','V'], 'IV':['I','V'], 'V':['I']} },
-        acoustic: { chords: ['I', 'ii', 'IV', 'V', 'vi'], next: {'I':['ii','vi','IV'], 'vi':['IV','V'], 'ii':['V'], 'IV':['I','V']} },
-        country: { chords: ['I', 'IV', 'V'], next: {'I':['IV','V'], 'IV':['I','V'], 'V':['I']} },
-        edm: { chords: ['i', 'VI', 'III', 'VII'], next: {'i':['VI'], 'VI':['III'], 'III':['VII'], 'VII':['i']} },
-        funk: { chords: ['i', 'IV', 'v', 'bVII'], next: {'i':['IV','bVII'], 'IV':['i'], 'bVII':['i']} },
-        hiphop: { chords: ['i', 'iv', 'v', 'VI'], next: {'i':['iv','VI'], 'iv':['v','i'], 'VI':['v']} },
-        rnb: { chords: ['i', 'ii', 'IV', 'V'], next: {'i':['ii','IV'], 'ii':['V'], 'V':['i']} }
-    };
+    // ... (Behalte die restlichen Variablen wie notes, scaleIntervals, genreRules, structure bei) ...
 
-    let structure = [{type:'Intro', bars:4}, {type:'Verse', bars:8}, {type:'Prechorus', bars:8}, {type:'Chorus', bars:8}, {type:'Ending', bars:4}];
-    let lastProgression = [];
+    let lastMidiBlobUrl = null;
 
-    // --- UI FUNKTIONEN ---
-    function renderStructure() {
-        const list = document.getElementById('structure-list'); list.innerHTML = '';
-        structure.forEach((b, i) => {
-            list.innerHTML += `<div class="block-item">
-                <select onchange="structure[${i}].type=this.value" style="width:100px; border:none; background:transparent;">
-                    <option ${b.type==='Intro'?'selected':''}>Intro</option><option ${b.type==='Verse'?'selected':''}>Verse</option><option ${b.type==='Prechorus'?'selected':''}>Prechorus</option><option ${b.type==='Chorus'?'selected':''}>Chorus</option><option ${b.type==='Bridge'?'selected':''}>Bridge</option><option ${b.type==='Ending'?'selected':''}>Ending</option>
-                </select>
-                <input type="number" value="${b.bars}" style="width:40px; border:1px solid #ddd; text-align:center;" onchange="structure[${i}].bars=parseInt(this.value)">
-                <button class="remove-btn" onclick="structure.splice(${i},1);renderStructure()">×</button>
-            </div>`;
-        });
-    }
-    function addBlock() { structure.push({type:'Verse', bars:8}); renderStructure(); }
-
-    function getChord(num, root, scale, comp) {
-        let rootIdx = notes.indexOf(root);
-        let map = {'I':0,'ii':1,'iii':2,'IV':3,'V':4,'vi':5,'vii':6,'i':0,'III':2,'iv':3,'v':4,'VI':5,'VII':6,'bVII':6};
-        let step = map[num] || 0;
-        let noteIdx = (rootIdx + scaleIntervals[scale][step]) % 12;
-        let offsets = [0, 4, 7]; // Major
-        let name = notes[noteIdx];
-        if ((scale==='major' && [1,2,5].includes(step)) || (scale==='minor' && [0,3,4].includes(step))) { name += "m"; offsets = [0,3,7]; }
-        if (comp >= 2) { name += (num==='V'?'7':'maj7'); offsets.push(num==='V'?10:11); }
-        return { name, offsets, rootIdx: noteIdx };
-    }
-
+    // --- DEINE BESTEHENDE GENERATE FUNKTION ---
     function generate() {
-        const gen = document.getElementById('genre').value;
-        const root = document.getElementById('rootNote').value;
-        const scale = document.getElementById('scaleType').value;
-        const comp = document.getElementById('complexity').value;
-        let txt = ""; lastProgression = [];
-        structure.forEach(b => {
-            txt += `[${b.type.toUpperCase()}]\n| `;
-            let cur = genreRules[gen].chords[0];
-            for(let i=0; i<b.bars; i++) {
-                let c = getChord(cur, root, scale, comp);
-                txt += c.name + " | "; lastProgression.push(c);
-                cur = (genreRules[gen].next[cur] || genreRules[gen].chords)[Math.floor(Math.random()*(genreRules[gen].next[cur] || genreRules[gen].chords).length)];
-            }
-            txt += "\n\n";
-        });
-        document.getElementById('output').innerText = txt;
-        document.getElementById('result-section').style.display = 'block';
-    }
-
-    // --- MINI MIDI ENGINE (Pure JS) ---
-    function exportMidi() {
-        if (!lastProgression.length) return;
+        // ... (Dein bisheriger Code für die Text-Generierung) ...
         
-        const midiData = createMidi(lastProgression);
-        const blob = new Blob([new Uint8Array(midiData)], {type: 'audio/midi'});
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = "progression.mid";
-        link.click();
+        // Füge am Ende der generate() Funktion dies hinzu, 
+        // um den Drag-Vorgang vorzubereiten:
+        prepareDrag();
     }
 
+    // --- NEUE FUNKTION: BEREITET DEN DRAG-VORGANG VOR ---
+    function prepareDrag() {
+        const dragHandle = document.getElementById('drag-handle');
+        
+        dragHandle.addEventListener('dragstart', (e) => {
+            if (!lastProgression.length) {
+                alert("Bitte erst generieren!");
+                e.preventDefault();
+                return;
+            }
+
+            // MIDI-Daten erzeugen
+            const midiData = createMidi(lastProgression);
+            const blob = new Blob([new Uint8Array(midiData)], {type: 'audio/midi'});
+            
+            // Falls schon eine URL existiert, löschen (Speichermanagement)
+            if (lastMidiBlobUrl) URL.revokeObjectURL(lastMidiBlobUrl);
+            
+            lastMidiBlobUrl = URL.createObjectURL(blob);
+            const fileName = "progression.mid";
+            
+            // Der entscheidende Trick für den DAW-Drag:
+            const downloadURL = `audio/midi:${fileName}:${lastMidiBlobUrl}`;
+            e.dataTransfer.setData("DownloadURL", downloadURL);
+            e.dataTransfer.setData("text/plain", fileName);
+        });
+    }
+
+    // --- DEINE BESTEHENDE CREATE-MIDI FUNKTION ---
     function createMidi(prog) {
         const ticksPerQuarter = 480;
         let header = [0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0];
         let trackData = [];
-        
-        // Tempo Meta Event (120 BPM)
-        trackData.push(0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20);
+        trackData.push(0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20); // 120 BPM
 
         prog.forEach(chord => {
-            let midiNotes = chord.offsets.map(o => chord.rootIdx + o + 48); // Octave 3
-            
-            // Note On
+            let midiNotes = chord.offsets.map(o => chord.rootIdx + o + 48);
             midiNotes.forEach((n, i) => {
-                trackData.push(i === 0 ? 0x00 : 0x00); // Delta Time
-                trackData.push(0x90, n, 0x60); // Note On, Note, Velocity
+                trackData.push(i === 0 ? 0x00 : 0x00); 
+                trackData.push(0x90, n, 0x60); 
             });
-
-            // Duration (Delta Time for Note Off)
-            let duration = ticksPerQuarter * 4; // 1 Bar
+            let duration = ticksPerQuarter * 4; 
             trackData.push(...encodeVarInt(duration));
-
-            // Note Off
             midiNotes.forEach((n, i) => {
-                if (i > 0) trackData.push(0x00); 
+                trackData.push(i === 0 ? 0x00 : 0x00); 
                 trackData.push(0x80, n, 0x00); 
             });
         });
 
-        // End of Track
         trackData.push(0x00, 0xFF, 0x2F, 0x00);
-
         let trackHeader = [0x4D, 0x54, 0x72, 0x6B, ...encodeLength(trackData.length)];
         return header.concat(trackHeader, trackData);
     }
 
+    // Hilfsfunktionen (VarInt / Length) wie vorher...
     function encodeVarInt(v) {
         let buffer = [v & 0x7F];
         while (v >>= 7) buffer.push((v & 0x7F) | 0x80);
         return buffer.reverse();
     }
-
     function encodeLength(len) {
         return [(len >> 24) & 0xFF, (len >> 16) & 0xFF, (len >> 8) & 0xFF, len & 0xFF];
     }
 
-    function copyText() {
-        const area = document.createElement('textarea');
-        area.value = document.getElementById('output').innerText;
-        document.body.appendChild(area); area.select();
-        document.execCommand('copy'); document.body.removeChild(area);
-        alert("Text kopiert!");
-    }
-
-    renderStructure();
+    // ... (Der Rest deiner Funktionen: copyText, addBlock, renderStructure etc.) ...
 </script>
 </body>
 </html>
