@@ -203,13 +203,12 @@
     const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const scaleIntervals = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10] };
     
-    // Harmonische Pfade (Markov-Chain Logik)
     const genreRules = {
         pop: { chords: ['I', 'IV', 'V', 'vi'], next: {'I':['IV','V','vi'], 'vi':['IV','V'], 'IV':['I','V'], 'V':['I']} },
         acoustic: { chords: ['I', 'ii', 'IV', 'V', 'vi'], next: {'I':['ii','vi','IV'], 'vi':['IV','V'], 'ii':['V'], 'IV':['I','V']} },
         country: { chords: ['I', 'IV', 'V'], next: {'I':['IV','V'], 'IV':['I','V'], 'V':['I']} },
         edm: { chords: ['i', 'VI', 'III', 'VII'], next: {'i':['VI'], 'VI':['III'], 'III':['VII'], 'VII':['i']} },
-        funk: { chords: ['i', 'IV', 'v7', 'bVII'], next: {'i':['IV','bVII'], 'IV':['i'], 'bVII':['i']} },
+        funk: { chords: ['i', 'IV', 'v', 'bVII'], next: {'i':['IV','bVII'], 'IV':['i'], 'bVII':['i']} },
         hiphop: { chords: ['i', 'iv', 'v', 'VI'], next: {'i':['iv','VI'], 'iv':['v','i'], 'VI':['v']} },
         rnb: { chords: ['i7', 'ii7', 'IVmaj7', 'V7alt'], next: {'i7':['ii7','IVmaj7'], 'ii7':['V7alt'], 'V7alt':['i7']} }
     };
@@ -221,6 +220,8 @@
         { type: 'Chorus', bars: 8 },
         { type: 'Ending', bars: 4 }
     ];
+
+    let lastGeneratedProgression = [];
 
     function renderStructure() {
         const list = document.getElementById('structure-list');
@@ -237,7 +238,6 @@
                         <option ${block.type==='Ending'?'selected':''}>Ending</option>
                     </select>
                     <input type="number" value="${block.bars}" min="1" style="width:50px; margin-bottom:0;" onchange="updateBlock(${index}, 'bars', this.value)">
-                    <span style="font-size: 0.8rem; color: #64748b;">Takte</span>
                     <button class="remove-btn" onclick="removeBlock(${index})">×</button>
                 </div>`;
         });
@@ -250,29 +250,27 @@
     function getChordInfo(numeral, root, scale, complexity) {
         const rootIdx = notes.indexOf(root);
         const intervals = scaleIntervals[scale];
-        const mapping = { 'I':0, 'ii':1, 'iii':2, 'IV':3, 'V':4, 'vi':5, 'vii':6, 'i':0, 'III':2, 'iv':3, 'v':4, 'VI':5, 'VII':6, 'bVII':6 };
+        const mapping = { 'I':0, 'ii':1, 'iii':2, 'IV':3, 'V':4, 'vi':5, 'vii':6, 'i':0, 'III':2, 'iv':3, 'v':4, 'VI':5, 'VII':6, 'bVII':6, 'i7':0, 'ii7':1, 'IVmaj7':3, 'V7alt':4 };
         
-        let step = mapping[numeral.replace('7','').replace('maj','').replace('alt','')] || 0;
+        let step = mapping[numeral] || 0;
         let noteIdx = (rootIdx + intervals[step]) % 12;
         let baseNote = notes[noteIdx];
         
         let suffix = "";
-        let chordNotes = [0, 4, 7]; // Major Triad
+        let chordOffsets = [0, 4, 7]; // Dur
         if ((scale === 'major' && [1, 2, 5].includes(step)) || (scale === 'minor' && [0, 3, 4].includes(step))) {
             suffix = "m";
-            chordNotes = [0, 3, 7]; // Minor Triad
+            chordOffsets = [0, 3, 7]; // Moll
         }
 
         if (complexity >= 2) {
-            if (numeral.includes('7') || numeral === 'V') { suffix += "7"; chordNotes.push(10); }
-            else if (numeral === 'I' || numeral === 'IV') { suffix += "maj7"; chordNotes.push(11); }
-            else { suffix += "7"; chordNotes.push(10); }
+            if (numeral.includes('7') || numeral === 'V') { suffix += "7"; chordOffsets.push(10); }
+            else if (numeral === 'I' || numeral === 'IV') { suffix += "maj7"; chordOffsets.push(11); }
+            else { suffix += "7"; chordOffsets.push(10); }
         }
         
-        return { name: baseNote + suffix, midiOffsets: chordNotes, rootNote: baseNote };
+        return { name: baseNote + suffix, midiOffsets: chordOffsets, rootIndex: noteIdx };
     }
-
-    let lastGeneratedProgression = [];
 
     function generate() {
         const genre = document.getElementById('genre').value;
@@ -305,41 +303,56 @@
     }
 
     async function copyText() {
+        const text = document.getElementById('output').innerText;
         try {
-            await navigator.clipboard.writeText(document.getElementById('output').innerText);
-            alert("Kopiert für Band-in-a-Box!");
+            await navigator.clipboard.writeText(text);
+            alert("Kopiert!");
         } catch (err) {
-            alert("Fehler beim Kopieren.");
+            // Fallback
+            const t = document.createElement("textarea");
+            t.value = text; document.body.appendChild(t); t.select();
+            document.execCommand('copy'); document.body.removeChild(t);
+            alert("Kopiert (Fallback)!");
         }
     }
 
     function exportMidi() {
-        const lib = window.MidiWriter;
-        if (!lib) return;
+        try {
+            const lib = window.MidiWriter;
+            if (!lib) throw new Error("MidiWriter Library nicht geladen!");
 
-        const track = new lib.Track();
-        track.setTempo(120);
+            const track = new lib.Track();
+            track.setTempo(120);
 
-        lastGeneratedProgression.forEach(chord => {
-            // Generiere MIDI Noten für den ganzen Akkord
-            const pitches = chord.midiOffsets.map(offset => {
-                let rootIdx = notes.indexOf(chord.rootNote);
-                let noteName = notes[(rootIdx + offset) % 12];
-                let octave = 3 + Math.floor((rootIdx + offset) / 12);
-                return noteName + octave;
+            if (lastGeneratedProgression.length === 0) throw new Error("Keine Akkorde generiert!");
+
+            lastGeneratedProgression.forEach(chord => {
+                // Notennamen für MIDI (z.B. C4, E4, G4)
+                const pitches = chord.midiOffsets.map(offset => {
+                    const totalIdx = chord.rootIndex + offset;
+                    const noteName = notes[totalIdx % 12];
+                    const octave = 3 + Math.floor(totalIdx / 12);
+                    return noteName + octave;
+                });
+                
+                // Ein Takt lang (duration: '1' entspricht einer ganzen Note)
+                track.addEvent(new lib.NoteEvent({pitch: pitches, duration: '1'}));
             });
-            
-            track.addEvent(new lib.NoteEvent({pitch: pitches, duration: '1'}));
-        });
 
-        const writer = new lib.Writer(track);
-        const data = writer.buildFile();
-        const blob = new Blob([data], {type: 'audio/midi'});
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = "song_progression.mid";
-        a.click();
+            const writer = new lib.Writer(track);
+            const dataUri = writer.dataUri(); // Sicherste Methode für Browser-Downloads
+            
+            const link = document.createElement('a');
+            link.href = dataUri;
+            link.download = "progression.mid";
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+
+        } catch (e) {
+            alert("Fehler: " + e.message);
+            console.error(e);
+        }
     }
 
     renderStructure();
