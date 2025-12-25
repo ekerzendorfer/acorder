@@ -1,80 +1,232 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chord Tool - Ableton & Biab</title>
+    <style>
+        :root { --p: #2563eb; --s: #10b981; --d: #1e293b; --l: #f8fafc; --accent: #6366f1; }
+        body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f1f5f9; padding: 20px; color: var(--d); }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        
+        header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
+        h2 { margin: 0; color: var(--p); }
+
+        .grid { display: grid; grid-template-columns: 1fr 1.2fr; gap: 25px; }
+        @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+
+        .card { background: var(--l); padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        h3 { margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 15px; }
+
+        label { font-weight: bold; font-size: 0.85rem; display: block; margin-top: 10px; }
+        select, input { padding: 10px; margin: 5px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; width: 100%; box-sizing: border-box; }
+
+        /* Breite der Taktzahl-Eingabe */
+        .bars-input { width: 70px !important; text-align: center; font-weight: bold; }
+
+        .block-item { display: flex; align-items: center; gap: 8px; background: white; padding: 8px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 6px; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .block-select { border: none; background: transparent; font-weight: 600; width: 110px !important; margin: 0 !important; cursor: pointer; }
+
+        .btn-gen { background: var(--d); color: white; font-weight: bold; cursor: pointer; border: none; padding: 15px; margin-top: 20px; width: 100%; border-radius: 8px; font-size: 1.1rem; transition: 0.2s; }
+        .btn-gen:hover { background: #000; }
+
+        .output-area { background: #0f172a; color: #10b981; padding: 20px; border-radius: 8px; font-family: 'Courier New', monospace; white-space: pre-wrap; margin-top: 20px; font-size: 1.1rem; border: 2px solid #334155; }
+
+        .actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+        .btn-copy { background: #f59e0b; color: white; border: none; cursor: pointer; padding: 12px 20px; border-radius: 6px; font-weight: bold; flex: 1; }
+        .btn-midi { background: var(--s); color: white; border: none; cursor: pointer; padding: 12px 20px; border-radius: 6px; font-weight: bold; flex: 1; }
+        
+        /* Drag Button Style */
+        #drag-handle { 
+            background: var(--accent); color: white; padding: 12px; border-radius: 6px; cursor: grab; 
+            font-weight: bold; flex-grow: 2; text-align: center; border: 2px dashed #4338ca; 
+            display: flex; align-items: center; justify-content: center; min-width: 200px;
+        }
+        #drag-handle:active { cursor: grabbing; background: #4338ca; }
+
+        .remove-btn { background: #ef4444; color: white; border: none; width: 30px; height: 30px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h2>🎵 Chord Progression Tool Pro</h2>
+        <small>Version: Standalone | Ableton Drag-and-Drop</small>
+    </header>
+
+    <div class="grid">
+        <div class="card">
+            <h3>1. Setup</h3>
+            <label>Tonart & Skala</label>
+            <div style="display:flex; gap:8px;">
+                <select id="rootNote"><option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option><option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option><option>A#</option><option>B</option></select>
+                <select id="scaleType"><option value="major">Dur</option><option value="minor">Moll</option></select>
+            </div>
+            
+            <label>Musikstil</label>
+            <select id="genre">
+                <option value="pop">Pop / Radio</option>
+                <option value="acoustic">Acoustic / Songwriter</option>
+                <option value="country">Country</option>
+                <option value="edm">Electronic / EDM</option>
+                <option value="funk">Funk</option>
+                <option value="hiphop">Hip-Hop</option>
+                <option value="rnb">RnB / Neo-Soul</option>
+            </select>
+
+            <label>Komplexität</label>
+            <select id="complexity">
+                <option value="1">Dreiklänge (Triads)</option>
+                <option value="2">7th Chords</option>
+                <option value="3">9/11/13 Extensions</option>
+            </select>
+        </div>
+
+        <div class="card">
+            <h3>2. Songstruktur</h3>
+            <div id="structure-list"></div>
+            <button onclick="addBlock()" style="background:#ddd; border:none; padding:8px; cursor:pointer; width:100%; border-radius:6px; font-weight:bold;">+ Block hinzufügen</button>
+        </div>
+    </div>
+
+    <button class="btn-gen" onclick="generate()">AKKORDFOLGE GENERIEREN</button>
+
+    <div id="result-section" style="display:none;">
+        <div id="output" class="output-area"></div>
+        <div class="actions">
+            <button class="btn-copy" onclick="copyText()">📋 BIAB TEXT</button>
+            <button class="btn-midi" onclick="exportMidi()">💾 MIDI DOWNLOAD</button>
+            <div id="drag-handle" draggable="true">➔ DRAG TO ABLETON</div>
+        </div>
+    </div>
+</div>
+
 <script>
-    // ... (Behalte die restlichen Variablen wie notes, scaleIntervals, genreRules, structure bei) ...
+    const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const scaleIntervals = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10] };
+    const genreRules = {
+        pop: { chords: ['I', 'IV', 'V', 'vi'], next: {'I':['IV','V','vi'], 'vi':['IV','V'], 'IV':['I','V'], 'V':['I']} },
+        acoustic: { chords: ['I', 'ii', 'IV', 'V', 'vi'], next: {'I':['ii','vi','IV'], 'vi':['IV','V'], 'ii':['V'], 'IV':['I','V']} },
+        country: { chords: ['I', 'IV', 'V'], next: {'I':['IV','V'], 'IV':['I','V'], 'V':['I']} },
+        edm: { chords: ['i', 'VI', 'III', 'VII'], next: {'i':['VI'], 'VI':['III'], 'III':['VII'], 'VII':['i']} },
+        funk: { chords: ['i', 'IV', 'v', 'bVII'], next: {'i':['IV','bVII'], 'IV':['i'], 'bVII':['i']} },
+        hiphop: { chords: ['i', 'iv', 'v', 'VI'], next: {'i':['iv','VI'], 'iv':['v','i'], 'VI':['v']} },
+        rnb: { chords: ['i7', 'ii7', 'IVmaj7', 'V7alt'], next: {'i7':['ii7','IVmaj7'], 'ii7':['V7alt'], 'V7alt':['i7']} }
+    };
 
-    let lastMidiBlobUrl = null;
+    // DEFAULTS WIE GEWÜNSCHT
+    let structure = [
+        {type:'Intro', bars:4}, {type:'Verse', bars:8}, {type:'Prechorus', bars:8}, 
+        {type:'Chorus', bars:8}, {type:'Bridge', bars:8}, {type:'Verse', bars:8}, 
+        {type:'Chorus', bars:8}, {type:'Ending', bars:4}
+    ];
 
-    // --- DEINE BESTEHENDE GENERATE FUNKTION ---
+    let lastProgression = [];
+
+    function renderStructure() {
+        const list = document.getElementById('structure-list');
+        list.innerHTML = '';
+        structure.forEach((b, i) => {
+            list.innerHTML += `
+                <div class="block-item">
+                    <select class="block-select" onchange="structure[${i}].type=this.value">
+                        <option ${b.type==='Intro'?'selected':''}>Intro</option>
+                        <option ${b.type==='Verse'?'selected':''}>Verse</option>
+                        <option ${b.type==='Prechorus'?'selected':''}>Prechorus</option>
+                        <option ${b.type==='Chorus'?'selected':''}>Chorus</option>
+                        <option ${b.type==='Bridge'?'selected':''}>Bridge</option>
+                        <option ${b.type==='Ending'?'selected':''}>Ending</option>
+                    </select>
+                    <input type="number" class="bars-input" value="${b.bars}" min="1" onchange="structure[${i}].bars=parseInt(this.value)">
+                    <span style="font-size:12px; color:#666;">T.</span>
+                    <div style="flex-grow:1"></div>
+                    <button class="remove-btn" onclick="structure.splice(${i},1);renderStructure()">×</button>
+                </div>`;
+        });
+    }
+
+    function addBlock() { structure.push({type:'Verse', bars:8}); renderStructure(); }
+
+    function getChord(num, root, scale, comp) {
+        let rootIdx = notes.indexOf(root);
+        let map = {'I':0,'ii':1,'iii':2,'IV':3,'V':4,'vi':5,'vii':6,'i':0,'III':2,'iv':3,'v':4,'VI':5,'VII':6,'bVII':6,'i7':0,'ii7':1,'IVmaj7':3,'V7alt':4};
+        let step = map[num] || 0;
+        let noteIdx = (rootIdx + scaleIntervals[scale][step]) % 12;
+        let offsets = [0, 4, 7]; let name = notes[noteIdx];
+        if ((scale==='major' && [1,2,5].includes(step)) || (scale==='minor' && [0,3,4].includes(step))) { name += "m"; offsets = [0,3,7]; }
+        if (comp >= 2) { name += (num.includes('7') || num==='V' ? '7' : 'maj7'); offsets.push(num.includes('maj')?11:10); }
+        return { name, offsets, rootIdx: noteIdx };
+    }
+
     function generate() {
-        // ... (Dein bisheriger Code für die Text-Generierung) ...
-        
-        // Füge am Ende der generate() Funktion dies hinzu, 
-        // um den Drag-Vorgang vorzubereiten:
-        prepareDrag();
-    }
-
-    // --- NEUE FUNKTION: BEREITET DEN DRAG-VORGANG VOR ---
-    function prepareDrag() {
-        const dragHandle = document.getElementById('drag-handle');
-        
-        dragHandle.addEventListener('dragstart', (e) => {
-            if (!lastProgression.length) {
-                alert("Bitte erst generieren!");
-                e.preventDefault();
-                return;
+        const gen = document.getElementById('genre').value;
+        const root = document.getElementById('rootNote').value;
+        const scale = document.getElementById('scaleType').value;
+        const comp = document.getElementById('complexity').value;
+        let txt = ""; lastProgression = [];
+        structure.forEach(b => {
+            txt += `[${b.type.toUpperCase()}]\n| `;
+            let cur = genreRules[gen].chords[Math.floor(Math.random()*genreRules[gen].chords.length)];
+            for(let i=0; i<b.bars; i++) {
+                let c = getChord(cur, root, scale, comp);
+                txt += c.name + " | "; lastProgression.push(c);
+                let pool = genreRules[gen].next[cur] || genreRules[gen].chords;
+                cur = pool[Math.floor(Math.random()*pool.length)];
             }
-
-            // MIDI-Daten erzeugen
-            const midiData = createMidi(lastProgression);
-            const blob = new Blob([new Uint8Array(midiData)], {type: 'audio/midi'});
-            
-            // Falls schon eine URL existiert, löschen (Speichermanagement)
-            if (lastMidiBlobUrl) URL.revokeObjectURL(lastMidiBlobUrl);
-            
-            lastMidiBlobUrl = URL.createObjectURL(blob);
-            const fileName = "progression.mid";
-            
-            // Der entscheidende Trick für den DAW-Drag:
-            const downloadURL = `audio/midi:${fileName}:${lastMidiBlobUrl}`;
-            e.dataTransfer.setData("DownloadURL", downloadURL);
-            e.dataTransfer.setData("text/plain", fileName);
+            txt += "\n\n";
         });
+        document.getElementById('output').innerText = txt;
+        document.getElementById('result-section').style.display = 'block';
+        setupDrag();
     }
 
-    // --- DEINE BESTEHENDE CREATE-MIDI FUNKTION ---
-    function createMidi(prog) {
-        const ticksPerQuarter = 480;
-        let header = [0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0];
-        let trackData = [];
-        trackData.push(0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20); // 120 BPM
-
+    // MIDI ENGINE (Standalone)
+    function createMidiBytes(prog) {
+        const tpq = 480;
+        let header = [0x4D,0x54,0x68,0x64, 0x00,0x00,0x00,0x06, 0x00,0x00, 0x00,0x01, 0x01,0xE0];
+        let track = [0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20];
         prog.forEach(chord => {
-            let midiNotes = chord.offsets.map(o => chord.rootIdx + o + 48);
-            midiNotes.forEach((n, i) => {
-                trackData.push(i === 0 ? 0x00 : 0x00); 
-                trackData.push(0x90, n, 0x60); 
-            });
-            let duration = ticksPerQuarter * 4; 
-            trackData.push(...encodeVarInt(duration));
-            midiNotes.forEach((n, i) => {
-                trackData.push(i === 0 ? 0x00 : 0x00); 
-                trackData.push(0x80, n, 0x00); 
-            });
+            let n = chord.offsets.map(o => chord.rootIdx + o + 48);
+            n.forEach((note, i) => { track.push(0x00, 0x90, note, 0x60); });
+            track.push(0x8F, 0x00); // 1 Bar Duration Delta
+            n.forEach((note, i) => { track.push(0x00, 0x80, note, 0x00); });
         });
-
-        trackData.push(0x00, 0xFF, 0x2F, 0x00);
-        let trackHeader = [0x4D, 0x54, 0x72, 0x6B, ...encodeLength(trackData.length)];
-        return header.concat(trackHeader, trackData);
+        track.push(0x00, 0xFF, 0x2F, 0x00);
+        let len = [(track.length>>24)&0xFF, (track.length>>16)&0xFF, (track.length>>8)&0xFF, track.length&0xFF];
+        return header.concat([0x4D, 0x54, 0x72, 0x6B], len, track);
     }
 
-    // Hilfsfunktionen (VarInt / Length) wie vorher...
-    function encodeVarInt(v) {
-        let buffer = [v & 0x7F];
-        while (v >>= 7) buffer.push((v & 0x7F) | 0x80);
-        return buffer.reverse();
-    }
-    function encodeLength(len) {
-        return [(len >> 24) & 0xFF, (len >> 16) & 0xFF, (len >> 8) & 0xFF, len & 0xFF];
+    function exportMidi() {
+        const bytes = new Uint8Array(createMidiBytes(lastProgression));
+        const blob = new Blob([bytes], {type: 'audio/midi'});
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = "progression.mid";
+        a.click();
     }
 
-    // ... (Der Rest deiner Funktionen: copyText, addBlock, renderStructure etc.) ...
+    function setupDrag() {
+        const handle = document.getElementById('drag-handle');
+        handle.addEventListener('dragstart', (e) => {
+            const bytes = new Uint8Array(createMidiBytes(lastProgression));
+            const blob = new Blob([bytes], {type: 'audio/midi'});
+            const url = URL.createObjectURL(blob);
+            const fileName = "progression.mid";
+            // Der DownloadURL Trick für Ableton/DAWs
+            e.dataTransfer.setData("DownloadURL", `audio/midi:${fileName}:${url}`);
+        });
+    }
+
+    function copyText() {
+        const t = document.createElement('textarea');
+        t.value = document.getElementById('output').innerText;
+        document.body.appendChild(t); t.select();
+        document.execCommand('copy'); document.body.removeChild(t);
+        alert("Text kopiert für BiaB!");
+    }
+
+    renderStructure();
 </script>
+</body>
+</html>
