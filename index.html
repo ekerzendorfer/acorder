@@ -21,9 +21,9 @@
         label { font-weight: bold; font-size: 0.85rem; display: block; margin-top: 10px; }
         select, input { padding: 10px; margin: 5px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; width: 100%; box-sizing: border-box; }
 
-        /* Breite der Taktzahl und des Dropdowns */
-        .bars-input { width: 80px !important; text-align: center; font-weight: bold; }
-        .block-select { width: 130px !important; font-weight: 600; cursor: pointer; }
+        /* Optimierte Breiten */
+        .bars-input { width: 90px !important; text-align: center; font-weight: bold; }
+        .block-select { width: 140px !important; font-weight: 600; cursor: pointer; border: 1px solid #ddd !important; background: white !important; }
 
         .block-item { display: flex; align-items: center; gap: 8px; background: white; padding: 10px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 6px; }
 
@@ -32,17 +32,19 @@
 
         .output-area { background: #0f172a; color: #10b981; padding: 20px; border-radius: 8px; font-family: 'Courier New', monospace; white-space: pre-wrap; margin-top: 20px; font-size: 1.1rem; border: 2px solid #334155; min-height: 100px; }
 
-        .actions { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; display: none; }
-        .btn-copy { background: #f59e0b; color: white; border: none; cursor: pointer; padding: 12px 20px; border-radius: 6px; font-weight: bold; flex: 1; }
-        .btn-midi { background: var(--s); color: white; border: none; cursor: pointer; padding: 12px 20px; border-radius: 6px; font-weight: bold; flex: 1; }
+        .actions { display: none; gap: 10px; margin-top: 20px; flex-wrap: wrap; align-items: stretch; }
+        .btn-copy { background: #f59e0b; color: white; border: none; cursor: pointer; padding: 12px; border-radius: 6px; font-weight: bold; flex: 1; }
+        .btn-midi { background: var(--s); color: white; border: none; cursor: pointer; padding: 12px; border-radius: 6px; font-weight: bold; flex: 1; }
         
         #drag-handle { 
             background: var(--accent); color: white; padding: 12px; border-radius: 6px; cursor: grab; 
-            font-weight: bold; flex: 2; text-align: center; border: 2px dashed #4338ca; 
-            display: flex; align-items: center; justify-content: center; min-width: 200px;
+            font-weight: bold; flex: 1.5; text-align: center; border: 2px dashed #4338ca; 
+            display: flex; align-items: center; justify-content: center; min-width: 180px;
         }
 
         .remove-btn { background: #ef4444; color: white; border: none; width: 30px; height: 30px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        
+        .hint { font-size: 0.75rem; color: #64748b; margin-top: 10px; text-align: center; font-style: italic; }
     </style>
 </head>
 <body>
@@ -50,12 +52,12 @@
 <div class="container">
     <header>
         <h2>🎵 Chord Progression Tool</h2>
-        <small>Professioneller Export für Ableton & BiaB</small>
+        <small>Standalone Tool für Ableton & BiaB</small>
     </header>
 
     <div class="grid">
         <div class="card">
-            <h3>1. Setup</h3>
+            <h3>1. Parameter</h3>
             <label>Tonart & Skala</label>
             <div style="display:flex; gap:8px;">
                 <select id="rootNote"><option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option><option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option><option>A#</option><option>B</option></select>
@@ -75,7 +77,7 @@
 
             <label>Komplexität</label>
             <select id="complexity">
-                <option value="1">Dreiklänge (Triads)</option>
+                <option value="1">Dreiklänge</option>
                 <option value="2">7th Chords</option>
                 <option value="3">9/11/13 Extensions</option>
             </select>
@@ -84,7 +86,7 @@
         <div class="card">
             <h3>2. Songstruktur</h3>
             <div id="structure-list"></div>
-            <button onclick="addBlock()" style="background:#ddd; border:none; padding:10px; cursor:pointer; width:100%; border-radius:6px; font-weight:bold; margin-top:10px;">+ Block hinzufügen</button>
+            <button onclick="addBlock()" style="background:#e2e8f0; border:none; padding:10px; cursor:pointer; width:100%; border-radius:6px; font-weight:bold; margin-top:10px;">+ Block hinzufügen</button>
         </div>
     </div>
 
@@ -95,11 +97,11 @@
         <button class="btn-copy" onclick="copyText()">📋 BIAB TEXT</button>
         <button class="btn-midi" onclick="exportMidi()">💾 MIDI DOWNLOAD</button>
         <div id="drag-handle" draggable="true">➔ DRAG TO ABLETON</div>
+        <div class="hint" style="width: 100%;">Tipp: Falls "Drag" blockiert ist, ziehe die Datei einfach direkt aus der Download-Liste deines Browsers in Ableton.</div>
     </div>
 </div>
 
 <script>
-    // Datenstrukturen
     const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const scaleIntervals = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10] };
     const genreRules = {
@@ -112,7 +114,6 @@
         rnb: { chords: ['i7', 'ii7', 'IVmaj7', 'V7'], next: {'i7':['ii7','IVmaj7'], 'ii7':['V7'], 'V7':['i7']} }
     };
 
-    // Struktur-Vorgabe
     let structure = [
         {type:'Intro', bars:4}, {type:'Verse', bars:8}, {type:'Prechorus', bars:8}, 
         {type:'Chorus', bars:8}, {type:'Bridge', bars:8}, {type:'Verse', bars:8}, 
@@ -121,10 +122,8 @@
 
     let lastProgression = [];
 
-    // UI Initialisierung
     function renderStructure() {
         const list = document.getElementById('structure-list');
-        if(!list) return;
         list.innerHTML = '';
         structure.forEach((b, i) => {
             const div = document.createElement('div');
@@ -139,7 +138,7 @@
                     <option ${b.type==='Ending'?'selected':''}>Ending</option>
                 </select>
                 <input type="number" class="bars-input" value="${b.bars}" min="1" onchange="structure[${i}].bars=parseInt(this.value)">
-                <span style="font-size:12px;">Takte</span>
+                <span style="font-size:12px; font-weight:bold;">T.</span>
                 <div style="flex-grow:1"></div>
                 <button class="remove-btn" onclick="removeBlock(${i})">×</button>
             `;
@@ -169,7 +168,6 @@
         const root = document.getElementById('rootNote').value;
         const scale = document.getElementById('scaleType').value;
         const comp = document.getElementById('complexity').value;
-        
         let txt = ""; lastProgression = [];
         structure.forEach(b => {
             txt += `[${b.type.toUpperCase()}]\n| `;
@@ -182,12 +180,10 @@
             }
             txt += "\n\n";
         });
-
         document.getElementById('output').innerText = txt;
         document.getElementById('result-section').style.display = 'flex';
     }
 
-    // MIDI Funktion
     function createMidiBytes(prog) {
         const tpq = 480;
         let header = [0x4D,0x54,0x68,0x64, 0x00,0x00,0x00,0x06, 0x00,0x00, 0x00,0x01, 0x01,0xE0];
@@ -195,7 +191,7 @@
         prog.forEach(chord => {
             let n = chord.offsets.map(o => chord.rootIdx + o + 48);
             n.forEach((note) => { track.push(0x00, 0x90, note, 0x60); });
-            track.push(0x8F, 0x00); // VLQ für 1920 Ticks (1 Takt)
+            track.push(0x8F, 0x00); // 1 Bar
             n.forEach((note) => { track.push(0x00, 0x80, note, 0x00); });
         });
         track.push(0x00, 0xFF, 0x2F, 0x00);
@@ -206,10 +202,12 @@
     function exportMidi() {
         const bytes = new Uint8Array(createMidiBytes(lastProgression));
         const blob = new Blob([bytes], {type: 'audio/midi'});
+        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
+        a.href = url;
         a.download = "progression.mid";
         a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     function copyText() {
@@ -217,19 +215,19 @@
         t.value = document.getElementById('output').innerText;
         document.body.appendChild(t); t.select();
         document.execCommand('copy'); document.body.removeChild(t);
-        alert("Text kopiert!");
+        alert("Kopiert!");
     }
 
-    // Drag and Drop Setup
     window.addEventListener('DOMContentLoaded', () => {
         renderStructure();
         const handle = document.getElementById('drag-handle');
         handle.addEventListener('dragstart', (e) => {
-            if(lastProgression.length === 0) return e.preventDefault();
+            if(!lastProgression.length) return e.preventDefault();
             const bytes = new Uint8Array(createMidiBytes(lastProgression));
             const blob = new Blob([bytes], {type: 'audio/midi'});
             const url = URL.createObjectURL(blob);
-            e.dataTransfer.setData("DownloadURL", `audio/midi:progression.mid:${window.location.origin + window.location.pathname.replace('index.html','')}${url}`);
+            // Chromium "DownloadURL" Hack
+            e.dataTransfer.setData("DownloadURL", `audio/midi:progression.mid:${url}`);
         });
     });
 </script>
