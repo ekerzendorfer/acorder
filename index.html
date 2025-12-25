@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chord Tool - Ableton & Biab</title>
     <style>
-        :root { --p: #2563eb; --s: #10b981; --d: #1e293b; --l: #f8fafc; --accent: #6366f1; }
+        :root { --p: #2563eb; --s: #10b981; --d: #1e293b; --l: #f8fafc; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; padding: 20px; color: var(--d); }
         .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
         
@@ -21,30 +21,24 @@
         label { font-weight: bold; font-size: 0.85rem; display: block; margin-top: 10px; }
         select, input { padding: 10px; margin: 5px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; width: 100%; box-sizing: border-box; }
 
-        /* Optimierte Breiten */
+        /* Felder breit genug machen */
         .bars-input { width: 90px !important; text-align: center; font-weight: bold; }
-        .block-select { width: 140px !important; font-weight: 600; cursor: pointer; border: 1px solid #ddd !important; background: white !important; }
+        .block-select { width: 150px !important; font-weight: 600; cursor: pointer; border: 1px solid #cbd5e1 !important; background: white !important; }
 
-        .block-item { display: flex; align-items: center; gap: 8px; background: white; padding: 10px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 6px; }
+        .block-item { display: flex; align-items: center; gap: 10px; background: white; padding: 10px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 6px; }
 
-        .btn-gen { background: var(--d); color: white; font-weight: bold; cursor: pointer; border: none; padding: 15px; margin-top: 20px; width: 100%; border-radius: 8px; font-size: 1.1rem; }
+        .btn-gen { background: var(--d); color: white; font-weight: bold; cursor: pointer; border: none; padding: 15px; margin-top: 20px; width: 100%; border-radius: 8px; font-size: 1.1rem; transition: 0.2s; }
         .btn-gen:hover { background: #000; }
 
-        .output-area { background: #0f172a; color: #10b981; padding: 20px; border-radius: 8px; font-family: 'Courier New', monospace; white-space: pre-wrap; margin-top: 20px; font-size: 1.1rem; border: 2px solid #334155; min-height: 100px; }
+        .output-area { background: #0f172a; color: #10b981; padding: 20px; border-radius: 8px; font-family: 'Courier New', monospace; white-space: pre-wrap; margin-top: 20px; font-size: 1.1rem; border: 2px solid #334155; min-height: 120px; }
 
-        .actions { display: none; gap: 10px; margin-top: 20px; flex-wrap: wrap; align-items: stretch; }
-        .btn-copy { background: #f59e0b; color: white; border: none; cursor: pointer; padding: 12px; border-radius: 6px; font-weight: bold; flex: 1; }
-        .btn-midi { background: var(--s); color: white; border: none; cursor: pointer; padding: 12px; border-radius: 6px; font-weight: bold; flex: 1; }
+        .actions { display: none; gap: 15px; margin-top: 20px; }
+        .btn-copy { background: #f59e0b; color: white; border: none; cursor: pointer; padding: 15px; border-radius: 8px; font-weight: bold; flex: 1; font-size: 1rem; }
+        .btn-midi { background: var(--s); color: white; border: none; cursor: pointer; padding: 15px; border-radius: 8px; font-weight: bold; flex: 1; font-size: 1rem; }
         
-        #drag-handle { 
-            background: var(--accent); color: white; padding: 12px; border-radius: 6px; cursor: grab; 
-            font-weight: bold; flex: 1.5; text-align: center; border: 2px dashed #4338ca; 
-            display: flex; align-items: center; justify-content: center; min-width: 180px;
-        }
-
-        .remove-btn { background: #ef4444; color: white; border: none; width: 30px; height: 30px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .remove-btn { background: #ef4444; color: white; border: none; width: 32px; height: 32px; cursor: pointer; border-radius: 4px; font-weight: bold; }
         
-        .hint { font-size: 0.75rem; color: #64748b; margin-top: 10px; text-align: center; font-style: italic; }
+        .workflow-hint { width: 100%; margin-top: 15px; background: #e0f2fe; color: #0369a1; padding: 10px; border-radius: 6px; font-size: 0.85rem; text-align: center; border: 1px solid #bae6fd; }
     </style>
 </head>
 <body>
@@ -52,12 +46,12 @@
 <div class="container">
     <header>
         <h2>🎵 Chord Progression Tool</h2>
-        <small>Standalone Tool für Ableton & BiaB</small>
+        <p style="margin:0; font-size: 0.9rem; color: #64748b;">Akkorde für Ableton Live & Band-in-a-Box</p>
     </header>
 
     <div class="grid">
         <div class="card">
-            <h3>1. Parameter</h3>
+            <h3>1. Einstellungen</h3>
             <label>Tonart & Skala</label>
             <div style="display:flex; gap:8px;">
                 <select id="rootNote"><option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option><option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option><option>A#</option><option>B</option></select>
@@ -77,9 +71,9 @@
 
             <label>Komplexität</label>
             <select id="complexity">
-                <option value="1">Dreiklänge</option>
-                <option value="2">7th Chords</option>
-                <option value="3">9/11/13 Extensions</option>
+                <option value="1">Dreiklänge (Standard)</option>
+                <option value="2">7th Chords (Jazz/Pop)</option>
+                <option value="3">Complex (9/11/13 Extensions)</option>
             </select>
         </div>
 
@@ -92,12 +86,15 @@
 
     <button class="btn-gen" onclick="generate()">AKKORDFOLGE GENERIEREN</button>
 
-    <div id="result-section" class="actions">
-        <div id="output" class="output-area" style="width: 100%;"></div>
-        <button class="btn-copy" onclick="copyText()">📋 BIAB TEXT</button>
-        <button class="btn-midi" onclick="exportMidi()">💾 MIDI DOWNLOAD</button>
-        <div id="drag-handle" draggable="true">➔ DRAG TO ABLETON</div>
-        <div class="hint" style="width: 100%;">Tipp: Falls "Drag" blockiert ist, ziehe die Datei einfach direkt aus der Download-Liste deines Browsers in Ableton.</div>
+    <div id="result-section">
+        <div id="output" class="output-area" style="display:none;"></div>
+        <div class="actions" id="action-buttons">
+            <button class="btn-copy" onclick="copyText()">📋 BIAB TEXT KOPIEREN</button>
+            <button class="btn-midi" onclick="exportMidi()">💾 MIDI DOWNLOAD</button>
+        </div>
+        <div id="workflow-hint" class="workflow-hint" style="display:none;">
+            <b>Tipp:</b> Ziehe die heruntergeladene MIDI-Datei direkt aus der Download-Leiste deines Browsers in Ableton!
+        </div>
     </div>
 </div>
 
@@ -114,6 +111,7 @@
         rnb: { chords: ['i7', 'ii7', 'IVmaj7', 'V7'], next: {'i7':['ii7','IVmaj7'], 'ii7':['V7'], 'V7':['i7']} }
     };
 
+    // DEINE GEWÜNSCHTE STRUKTUR
     let structure = [
         {type:'Intro', bars:4}, {type:'Verse', bars:8}, {type:'Prechorus', bars:8}, 
         {type:'Chorus', bars:8}, {type:'Bridge', bars:8}, {type:'Verse', bars:8}, 
@@ -138,15 +136,14 @@
                     <option ${b.type==='Ending'?'selected':''}>Ending</option>
                 </select>
                 <input type="number" class="bars-input" value="${b.bars}" min="1" onchange="structure[${i}].bars=parseInt(this.value)">
-                <span style="font-size:12px; font-weight:bold;">T.</span>
+                <span style="font-size:13px; font-weight:bold;">T.</span>
                 <div style="flex-grow:1"></div>
-                <button class="remove-btn" onclick="removeBlock(${i})">×</button>
+                <button class="remove-btn" onclick="structure.splice(${i},1);renderStructure()">×</button>
             `;
             list.appendChild(div);
         });
     }
 
-    function removeBlock(i) { structure.splice(i, 1); renderStructure(); }
     function addBlock() { structure.push({type:'Verse', bars:8}); renderStructure(); }
 
     function getChord(num, root, scale, comp) {
@@ -168,6 +165,7 @@
         const root = document.getElementById('rootNote').value;
         const scale = document.getElementById('scaleType').value;
         const comp = document.getElementById('complexity').value;
+        
         let txt = ""; lastProgression = [];
         structure.forEach(b => {
             txt += `[${b.type.toUpperCase()}]\n| `;
@@ -180,8 +178,11 @@
             }
             txt += "\n\n";
         });
+
         document.getElementById('output').innerText = txt;
-        document.getElementById('result-section').style.display = 'flex';
+        document.getElementById('output').style.display = 'block';
+        document.getElementById('action-buttons').style.display = 'flex';
+        document.getElementById('workflow-hint').style.display = 'block';
     }
 
     function createMidiBytes(prog) {
@@ -202,12 +203,10 @@
     function exportMidi() {
         const bytes = new Uint8Array(createMidiBytes(lastProgression));
         const blob = new Blob([bytes], {type: 'audio/midi'});
-        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = "progression.mid";
+        a.href = URL.createObjectURL(blob);
+        a.download = "song_progression.mid";
         a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
     }
 
     function copyText() {
@@ -215,21 +214,10 @@
         t.value = document.getElementById('output').innerText;
         document.body.appendChild(t); t.select();
         document.execCommand('copy'); document.body.removeChild(t);
-        alert("Kopiert!");
+        alert("Text kopiert für BiaB!");
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-        renderStructure();
-        const handle = document.getElementById('drag-handle');
-        handle.addEventListener('dragstart', (e) => {
-            if(!lastProgression.length) return e.preventDefault();
-            const bytes = new Uint8Array(createMidiBytes(lastProgression));
-            const blob = new Blob([bytes], {type: 'audio/midi'});
-            const url = URL.createObjectURL(blob);
-            // Chromium "DownloadURL" Hack
-            e.dataTransfer.setData("DownloadURL", `audio/midi:progression.mid:${url}`);
-        });
-    });
+    window.onload = renderStructure;
 </script>
 </body>
 </html>
