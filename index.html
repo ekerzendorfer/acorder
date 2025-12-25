@@ -3,47 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chord Generator Pro</title>
-    
-    <!-- Wir nutzen jetzt jsDelivr, einen der stabilsten Server weltweit -->
-    <script src="https://cdn.jsdelivr.net/npm/midi-writer-js@2.1.4/browser/index.js"></script>
-    
+    <title>Chord Tool - No External Libs</title>
     <style>
-        :root { --primary: #2563eb; --secondary: #10b981; --dark: #1e293b; --light: #f8fafc; }
-        body { font-family: sans-serif; background: #f1f5f9; padding: 20px; color: var(--dark); }
-        .container { max-width: 800px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        :root { --p: #2563eb; --s: #10b981; --d: #1e293b; --l: #f8fafc; }
+        body { font-family: system-ui, sans-serif; background: #f1f5f9; padding: 20px; color: var(--d); line-height: 1.5; }
+        .container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-        .card { background: var(--light); padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
-        select, input, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; }
-        .btn-gen { background: var(--dark); color: white; font-weight: bold; cursor: pointer; padding: 15px; margin-top: 20px; }
-        .output-area { background: #0f172a; color: #10b981; padding: 15px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; margin-top: 20px; }
-        .btn-copy { background: #f59e0b; color: white; cursor: pointer; font-weight: bold; width: auto; padding: 10px 20px; }
-        .btn-midi { background: var(--secondary); color: white; cursor: pointer; font-weight: bold; width: auto; padding: 10px 20px; }
-        .block-item { display: flex; align-items: center; gap: 5px; background: white; padding: 5px; margin-bottom: 5px; border-radius: 5px; }
-        .remove-btn { background: #ef4444; color: white; border: none; width: 25px; cursor: pointer; border-radius: 4px; }
+        .card { background: var(--l); padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; }
+        h3 { margin-top: 0; font-size: 1.1rem; color: var(--p); }
+        select, input, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 6px; border: 1px solid #ccc; box-sizing: border-box; }
+        .btn-gen { background: var(--d); color: white; font-weight: bold; cursor: pointer; border: none; padding: 15px; margin-top: 20px; font-size: 1.1rem; }
+        .output-area { background: #0f172a; color: #10b981; padding: 15px; border-radius: 8px; font-family: monospace; white-space: pre-wrap; margin-top: 20px; font-size: 1rem; }
+        .actions { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-midi { background: var(--s); color: white; border: none; cursor: pointer; font-weight: bold; }
+        .btn-copy { background: #f59e0b; color: white; border: none; cursor: pointer; font-weight: bold; }
+        .block-item { display: flex; align-items: center; gap: 5px; background: white; padding: 5px; margin-bottom: 5px; border: 1px solid #ddd; border-radius: 4px; }
+        .remove-btn { background: #ef4444; color: white; border: none; width: 30px; cursor: pointer; border-radius: 4px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>🎵 Chord Progression Tool</h2>
+    <header style="text-align: center; margin-bottom: 20px;">
+        <h2 style="margin:0;">🎵 Chord Progression Tool</h2>
+        <small>Standalone Version (No External Dependencies)</small>
+    </header>
+
     <div class="grid">
         <div class="card">
-            <h3>Einstellungen</h3>
-            <label>Tonart</label>
-            <select id="rootNote"><option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option><option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option><option>A#</option><option>B</option></select>
-            <select id="scaleType"><option value="major">Dur</option><option value="minor">Moll</option></select>
-            <label>Stil & Komplexität</label>
+            <h3>1. Einstellungen</h3>
+            <label>Tonart & Skala</label>
+            <div style="display:flex; gap:5px;">
+                <select id="rootNote"><option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option><option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option><option>A#</option><option>B</option></select>
+                <select id="scaleType"><option value="major">Dur</option><option value="minor">Moll</option></select>
+            </div>
+            <label>Musikstil</label>
             <select id="genre">
                 <option value="pop">Pop</option><option value="acoustic">Acoustic</option><option value="country">Country</option>
                 <option value="edm">EDM</option><option value="funk">Funk</option><option value="hiphop">Hip-Hop</option><option value="rnb">RnB</option>
             </select>
-            <select id="complexity"><option value="1">Dreiklänge</option><option value="2">7th Chords</option><option value="3">9/11/13</option></select>
+            <label>Komplexität</label>
+            <select id="complexity"><option value="1">Dreiklänge</option><option value="2">7th Chords</option><option value="3">9/11/13 Extensions</option></select>
         </div>
         <div class="card">
-            <h3>Struktur</h3>
+            <h3>2. Struktur</h3>
             <div id="structure-list"></div>
-            <button onclick="addBlock()">+ Block</button>
+            <button onclick="addBlock()" style="background:#e2e8f0; border:none; color: #333; cursor:pointer;">+ Block hinzufügen</button>
         </div>
     </div>
 
@@ -51,14 +56,15 @@
 
     <div id="result-section" style="display:none;">
         <div id="output" class="output-area"></div>
-        <div style="display:flex; gap:10px; margin-top:10px;">
-            <button class="btn-copy" onclick="copyText()">📋 Für Biab kopieren</button>
-            <button class="btn-midi" onclick="exportMidi()">💾 MIDI für Ableton</button>
+        <div class="actions">
+            <button class="btn-copy" onclick="copyText()">📋 Biab Text</button>
+            <button class="btn-midi" onclick="exportMidi()">💾 MIDI Export</button>
         </div>
     </div>
 </div>
 
 <script>
+    // --- KONFIGURATION ---
     const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const scaleIntervals = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10] };
     const genreRules = {
@@ -68,33 +74,36 @@
         edm: { chords: ['i', 'VI', 'III', 'VII'], next: {'i':['VI'], 'VI':['III'], 'III':['VII'], 'VII':['i']} },
         funk: { chords: ['i', 'IV', 'v', 'bVII'], next: {'i':['IV','bVII'], 'IV':['i'], 'bVII':['i']} },
         hiphop: { chords: ['i', 'iv', 'v', 'VI'], next: {'i':['iv','VI'], 'iv':['v','i'], 'VI':['v']} },
-        rnb: { chords: ['i7', 'ii7', 'IVmaj7', 'V7alt'], next: {'i7':['ii7','IVmaj7'], 'ii7':['V7alt'], 'V7alt':['i7']} }
+        rnb: { chords: ['i', 'ii', 'IV', 'V'], next: {'i':['ii','IV'], 'ii':['V'], 'V':['i']} }
     };
 
     let structure = [{type:'Intro', bars:4}, {type:'Verse', bars:8}, {type:'Prechorus', bars:8}, {type:'Chorus', bars:8}, {type:'Ending', bars:4}];
-    let lastGenerated = [];
+    let lastProgression = [];
 
+    // --- UI FUNKTIONEN ---
     function renderStructure() {
         const list = document.getElementById('structure-list'); list.innerHTML = '';
         structure.forEach((b, i) => {
             list.innerHTML += `<div class="block-item">
-                <select onchange="structure[${i}].type=this.value" style="width:100px"><option ${b.type==='Intro'?'selected':''}>Intro</option><option ${b.type==='Verse'?'selected':''}>Verse</option><option ${b.type==='Prechorus'?'selected':''}>Prechorus</option><option ${b.type==='Chorus'?'selected':''}>Chorus</option><option ${b.type==='Bridge'?'selected':''}>Bridge</option><option ${b.type==='Ending'?'selected':''}>Ending</option></select>
-                <input type="number" value="${b.bars}" style="width:40px" onchange="structure[${i}].bars=parseInt(this.value)">
+                <select onchange="structure[${i}].type=this.value" style="width:100px; border:none; background:transparent;">
+                    <option ${b.type==='Intro'?'selected':''}>Intro</option><option ${b.type==='Verse'?'selected':''}>Verse</option><option ${b.type==='Prechorus'?'selected':''}>Prechorus</option><option ${b.type==='Chorus'?'selected':''}>Chorus</option><option ${b.type==='Bridge'?'selected':''}>Bridge</option><option ${b.type==='Ending'?'selected':''}>Ending</option>
+                </select>
+                <input type="number" value="${b.bars}" style="width:40px; border:1px solid #ddd; text-align:center;" onchange="structure[${i}].bars=parseInt(this.value)">
                 <button class="remove-btn" onclick="structure.splice(${i},1);renderStructure()">×</button>
             </div>`;
         });
     }
-
     function addBlock() { structure.push({type:'Verse', bars:8}); renderStructure(); }
 
     function getChord(num, root, scale, comp) {
         let rootIdx = notes.indexOf(root);
-        let step = {'I':0,'ii':1,'iii':2,'IV':3,'V':4,'vi':5,'vii':6,'i':0,'III':2,'iv':3,'v':4,'VI':5,'VII':6,'bVII':6}[num.replace('7','').replace('maj','').replace('alt','')] || 0;
+        let map = {'I':0,'ii':1,'iii':2,'IV':3,'V':4,'vi':5,'vii':6,'i':0,'III':2,'iv':3,'v':4,'VI':5,'VII':6,'bVII':6};
+        let step = map[num] || 0;
         let noteIdx = (rootIdx + scaleIntervals[scale][step]) % 12;
+        let offsets = [0, 4, 7]; // Major
         let name = notes[noteIdx];
-        let offsets = [0, 4, 7];
-        if ((scale==='major'&&[1,2,5].includes(step)) || (scale==='minor'&&[0,3,4].includes(step))) { name+="m"; offsets=[0,3,7]; }
-        if (comp>=2) { name+=(num.includes('7')||num==='V')?"7":"maj7"; offsets.push(num.includes('maj')?11:10); }
+        if ((scale==='major' && [1,2,5].includes(step)) || (scale==='minor' && [0,3,4].includes(step))) { name += "m"; offsets = [0,3,7]; }
+        if (comp >= 2) { name += (num==='V'?'7':'maj7'); offsets.push(num==='V'?10:11); }
         return { name, offsets, rootIdx: noteIdx };
     }
 
@@ -103,14 +112,14 @@
         const root = document.getElementById('rootNote').value;
         const scale = document.getElementById('scaleType').value;
         const comp = document.getElementById('complexity').value;
-        let txt = ""; lastGenerated = [];
+        let txt = ""; lastProgression = [];
         structure.forEach(b => {
             txt += `[${b.type.toUpperCase()}]\n| `;
             let cur = genreRules[gen].chords[0];
             for(let i=0; i<b.bars; i++) {
                 let c = getChord(cur, root, scale, comp);
-                txt += c.name + " | "; lastGenerated.push(c);
-                cur = (genreRules[gen].next[cur] || genreRules[gen].chords)[0];
+                txt += c.name + " | "; lastProgression.push(c);
+                cur = (genreRules[gen].next[cur] || genreRules[gen].chords)[Math.floor(Math.random()*(genreRules[gen].next[cur] || genreRules[gen].chords).length)];
             }
             txt += "\n\n";
         });
@@ -118,38 +127,69 @@
         document.getElementById('result-section').style.display = 'block';
     }
 
+    // --- MINI MIDI ENGINE (Pure JS) ---
+    function exportMidi() {
+        if (!lastProgression.length) return;
+        
+        const midiData = createMidi(lastProgression);
+        const blob = new Blob([new Uint8Array(midiData)], {type: 'audio/midi'});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = "progression.mid";
+        link.click();
+    }
+
+    function createMidi(prog) {
+        const ticksPerQuarter = 480;
+        let header = [0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0];
+        let trackData = [];
+        
+        // Tempo Meta Event (120 BPM)
+        trackData.push(0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20);
+
+        prog.forEach(chord => {
+            let midiNotes = chord.offsets.map(o => chord.rootIdx + o + 48); // Octave 3
+            
+            // Note On
+            midiNotes.forEach((n, i) => {
+                trackData.push(i === 0 ? 0x00 : 0x00); // Delta Time
+                trackData.push(0x90, n, 0x60); // Note On, Note, Velocity
+            });
+
+            // Duration (Delta Time for Note Off)
+            let duration = ticksPerQuarter * 4; // 1 Bar
+            trackData.push(...encodeVarInt(duration));
+
+            // Note Off
+            midiNotes.forEach((n, i) => {
+                if (i > 0) trackData.push(0x00); 
+                trackData.push(0x80, n, 0x00); 
+            });
+        });
+
+        // End of Track
+        trackData.push(0x00, 0xFF, 0x2F, 0x00);
+
+        let trackHeader = [0x4D, 0x54, 0x72, 0x6B, ...encodeLength(trackData.length)];
+        return header.concat(trackHeader, trackData);
+    }
+
+    function encodeVarInt(v) {
+        let buffer = [v & 0x7F];
+        while (v >>= 7) buffer.push((v & 0x7F) | 0x80);
+        return buffer.reverse();
+    }
+
+    function encodeLength(len) {
+        return [(len >> 24) & 0xFF, (len >> 16) & 0xFF, (len >> 8) & 0xFF, len & 0xFF];
+    }
+
     function copyText() {
         const area = document.createElement('textarea');
         area.value = document.getElementById('output').innerText;
         document.body.appendChild(area); area.select();
         document.execCommand('copy'); document.body.removeChild(area);
-        alert("Kopiert!");
-    }
-
-    function exportMidi() {
-        try {
-            // Wir prüfen alle möglichen Orte, wo die Library sein könnte
-            const MW = window.MidiWriter || (typeof MidiWriter !== 'undefined' ? MidiWriter : null);
-            if (!MW) throw new Error("MIDI Library nicht gefunden. Bitte Seite neu laden.");
-
-            const track = new MW.Track();
-            track.setTempo(120);
-
-            lastGenerated.forEach(c => {
-                const pitches = c.offsets.map(o => {
-                    let n = notes[(c.rootIdx + o) % 12];
-                    let oct = 3 + Math.floor((c.rootIdx + o) / 12);
-                    return n + oct;
-                });
-                track.addEvent(new MW.NoteEvent({pitch: pitches, duration: '1'}));
-            });
-
-            const writer = new MW.Writer(track);
-            const link = document.createElement('a');
-            link.href = writer.dataUri();
-            link.download = "progression.mid";
-            link.click();
-        } catch (e) { alert(e.message); }
+        alert("Text kopiert!");
     }
 
     renderStructure();
