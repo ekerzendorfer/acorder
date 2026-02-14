@@ -3,50 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chord Tool - Ableton & BiaB</title>
+    <title>Chord Tool Pro - Ableton & BiaB</title>
     <style>
-        :root { --p: #2563eb; --s: #10b981; --d: #1e293b; --l: #f8fafc; }
+        :root { --p: #2563eb; --s: #10b981; --d: #1e293b; --l: #f8fafc; --acc: #f43f5e; }
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: #f1f5f9; padding: 20px; color: var(--d); }
-        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        .container { max-width: 900px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
         
-        header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #eee; padding-bottom: 15px; }
-        h2 { margin: 0; color: var(--p); }
+        header { text-align: center; margin-bottom: 25px; border-bottom: 2px solid #f1f5f9; padding-bottom: 15px; }
+        h2 { margin: 0; color: var(--p); letter-spacing: -0.5px; }
 
-        .grid { display: grid; grid-template-columns: 1fr 1.3fr; gap: 25px; }
+        .grid { display: grid; grid-template-columns: 1fr 1.4fr; gap: 25px; }
         @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
 
         .card { background: var(--l); padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; }
-        h3 { margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid #ddd; padding-bottom: 5px; margin-bottom: 15px; }
+        h3 { margin-top: 0; font-size: 1.1rem; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; margin-bottom: 15px; color: #475569; }
 
-        label { font-weight: bold; font-size: 0.85rem; display: block; margin-top: 10px; }
-        select, input { padding: 10px; margin: 5px 0; border-radius: 6px; border: 1px solid #ccc; font-size: 14px; width: 100%; box-sizing: border-box; }
+        label { font-weight: 600; font-size: 0.85rem; display: block; margin-top: 12px; color: #64748b; }
+        select, input { padding: 10px; margin: 5px 0; border-radius: 6px; border: 1px solid #cbd5e1; font-size: 14px; width: 100%; box-sizing: border-box; background: white; }
+        select:focus, input:focus { outline: 2px solid var(--p); border-color: transparent; }
 
-        /* Felder breit genug machen wie gewünscht */
-        .bars-input { width: 95px !important; text-align: center; font-weight: bold; }
-        .block-select { width: 160px !important; font-weight: 600; cursor: pointer; border: 1px solid #cbd5e1 !important; background: white !important; }
+        .bars-input { width: 70px !important; text-align: center; font-weight: bold; }
+        .block-select { font-weight: 600; cursor: pointer; }
+        .block-item { display: flex; align-items: center; gap: 10px; background: white; padding: 8px 12px; margin-bottom: 8px; border: 1px solid #e2e8f0; border-radius: 6px; transition: transform 0.1s; }
+        .block-item:hover { border-color: var(--p); }
 
-        .block-item { display: flex; align-items: center; gap: 10px; background: white; padding: 10px; margin-bottom: 8px; border: 1px solid #ddd; border-radius: 6px; }
+        .btn-group { display: flex; gap: 10px; margin-top: 20px; }
+        .btn-gen { background: var(--d); color: white; font-weight: bold; cursor: pointer; border: none; padding: 15px; flex: 2; border-radius: 8px; font-size: 1.1rem; transition: background 0.2s; }
+        .btn-gen:hover { background: #0f172a; }
+        .btn-play { background: var(--acc); color: white; font-weight: bold; cursor: pointer; border: none; padding: 15px; flex: 1; border-radius: 8px; font-size: 1.1rem; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-play:disabled { opacity: 0.5; cursor: not-allowed; }
 
-        .btn-gen { background: var(--d); color: white; font-weight: bold; cursor: pointer; border: none; padding: 15px; margin-top: 20px; width: 100%; border-radius: 8px; font-size: 1.1rem; }
-        .btn-gen:hover { background: #000; }
-
-        .output-area { background: #0f172a; color: #10b981; padding: 20px; border-radius: 8px; font-family: 'Courier New', monospace; white-space: pre-wrap; margin-top: 20px; font-size: 1.1rem; border: 2px solid #334155; min-height: 120px; }
-
-        .actions { display: none; gap: 15px; margin-top: 20px; }
-        .btn-copy { background: #f59e0b; color: white; border: none; cursor: pointer; padding: 15px; border-radius: 8px; font-weight: bold; flex: 1; font-size: 1rem; }
-        .btn-midi { background: var(--s); color: white; border: none; cursor: pointer; padding: 15px; border-radius: 8px; font-weight: bold; flex: 1; font-size: 1rem; }
+        .output-area { background: #0f172a; color: #10b981; padding: 20px; border-radius: 8px; font-family: 'Courier New', monospace; white-space: pre-wrap; margin-top: 20px; font-size: 1.1rem; border: 2px solid #334155; min-height: 100px; position: relative; }
         
-        .remove-btn { background: #ef4444; color: white; border: none; width: 32px; height: 32px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+        .actions { display: none; gap: 15px; margin-top: 20px; flex-wrap: wrap; }
+        .btn-copy { background: #f59e0b; color: white; border: none; cursor: pointer; padding: 12px; border-radius: 8px; font-weight: bold; flex: 1; min-width: 200px; }
+        .btn-midi { background: var(--s); color: white; border: none; cursor: pointer; padding: 12px; border-radius: 8px; font-weight: bold; flex: 1; min-width: 200px; }
         
-        .workflow-hint { width: 100%; margin-top: 15px; background: #e0f2fe; color: #0369a1; padding: 12px; border-radius: 6px; font-size: 0.85rem; text-align: center; border: 1px solid #bae6fd; font-style: italic; }
+        .remove-btn { background: #ef4444; color: white; border: none; width: 28px; height: 28px; cursor: pointer; border-radius: 4px; font-weight: bold; display: flex; align-items: center; justify-content: center; }
+        
+        .workflow-hint { width: 100%; margin-top: 15px; background: #eff6ff; color: #1e40af; padding: 12px; border-radius: 6px; font-size: 0.85rem; text-align: center; border: 1px solid #dbeafe; }
+
+        /* Toggle Switch für Humanize */
+        .switch-container { display: flex; align-items: center; gap: 10px; margin-top: 10px; font-size: 0.9rem; }
+        .chk-humanize { width: auto; margin: 0; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <header>
-        <h2>🎵 Chord Progression Tool</h2>
-        <p style="margin:0; font-size: 0.9rem; color: #64748b;">MIDI Export für Ableton Live & BiaB</p>
+        <h2>🎵 Chord Progression Tool 2.0</h2>
+        <p style="margin:5px 0 0; font-size: 0.9rem; color: #64748b;">Smart Voice Leading & Web Audio Preview</p>
     </header>
 
     <div class="grid">
@@ -55,71 +62,83 @@
             <label>Tonart & Skala</label>
             <div style="display:flex; gap:8px;">
                 <select id="rootNote"><option>C</option><option>C#</option><option>D</option><option>D#</option><option>E</option><option>F</option><option>F#</option><option>G</option><option>G#</option><option>A</option><option>A#</option><option>B</option></select>
-                <select id="scaleType"><option value="major">Dur</option><option value="minor">Moll</option></select>
+                <select id="scaleType"><option value="major">Dur (Major)</option><option value="minor">Moll (Minor)</option></select>
             </div>
             
             <label>Musikstil</label>
             <select id="genre">
                 <option value="pop">Pop / Radio</option>
-                <option value="acoustic">Acoustic / Songwriter</option>
-                <option value="country">Country</option>
-                <option value="edm">Electronic / EDM</option>
-                <option value="funk">Funk</option>
-                <option value="hiphop">Hip-Hop</option>
+                <option value="acoustic">Acoustic / Ballad</option>
+                <option value="jazz">Jazz / LoFi</option>
+                <option value="edm">Electronic / House</option>
                 <option value="rnb">RnB / Neo-Soul</option>
+                <option value="epic">Epic / Cinematic</option>
             </select>
 
             <label>Komplexität</label>
             <select id="complexity">
-                <option value="1">Dreiklänge (Standard)</option>
-                <option value="2">7th Chords (Jazz/Pop)</option>
-                <option value="3">Complex (9/11/13 Extensions)</option>
+                <option value="1">Basic (Triads)</option>
+                <option value="2">Extended (7ths)</option>
+                <option value="3">Jazzy (9/11/13)</option>
             </select>
+
+            <div class="switch-container">
+                <input type="checkbox" id="humanize" class="chk-humanize" checked>
+                <label style="margin:0; cursor:pointer;" for="humanize">Humanize (Timing & Velocity)</label>
+            </div>
         </div>
 
         <div class="card">
             <h3>2. Songstruktur</h3>
             <div id="structure-list"></div>
-            <button onclick="addBlock()" style="background:#e2e8f0; border:none; padding:10px; cursor:pointer; width:100%; border-radius:6px; font-weight:bold; margin-top:10px;">+ Block hinzufügen</button>
+            <button onclick="addBlock()" style="background:#f1f5f9; border:1px dashed #94a3b8; color:#475569; padding:10px; cursor:pointer; width:100%; border-radius:6px; font-weight:600; margin-top:10px; transition:0.2s;">+ Block hinzufügen</button>
         </div>
     </div>
 
-    <button class="btn-gen" onclick="generate()">AKKORDFOLGE GENERIEREN</button>
+    <div class="btn-group">
+        <button class="btn-gen" onclick="generate()">⚡ NEU GENERIEREN</button>
+        <button class="btn-play" id="btnPlay" onclick="playPreview()" disabled>🔊 PLAY</button>
+        <button class="btn-play" id="btnStop" onclick="stopPreview()" style="display:none; background:#ef4444;">⏹ STOP</button>
+    </div>
 
     <div id="result-section">
         <div id="output" class="output-area" style="display:none;"></div>
+        
         <div class="actions" id="action-buttons">
-            <button class="btn-copy" onclick="copyText()">📋 BIAB TEXT KOPIEREN</button>
-            <button class="btn-midi" onclick="exportMidi()">💾 MIDI FÜR ABLETON DOWNLOADEN</button>
+            <button class="btn-copy" onclick="copyText()">📋 TEXT FÜR BAND-IN-A-BOX</button>
+            <button class="btn-midi" onclick="exportMidi()">💾 MIDI FÜR ABLETON</button>
         </div>
+        
         <div id="workflow-hint" class="workflow-hint" style="display:none;">
-            <b>Wichtig für Ableton:</b> Ziehe die heruntergeladene Datei direkt aus der Download-Leiste deines Browsers auf eine MIDI-Spur in Ableton!
+            <b>Tipp:</b> Die generierten Akkorde nutzen <i>Voice Leading</i>, um Sprünge zu vermeiden. In Ableton einfach auf eine MIDI-Spur ziehen.
         </div>
     </div>
 </div>
 
 <script>
+    // --- MUSIC THEORY ENGINE ---
     const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
     const scaleIntervals = { major: [0, 2, 4, 5, 7, 9, 11], minor: [0, 2, 3, 5, 7, 8, 10] };
+    
+    // Erweiterte Genre-Regeln für interessantere Progressionen
     const genreRules = {
-        pop: { chords: ['I', 'IV', 'V', 'vi'], next: {'I':['IV','V','vi'], 'vi':['IV','V'], 'IV':['I','V'], 'V':['I']} },
-        acoustic: { chords: ['I', 'ii', 'IV', 'V', 'vi'], next: {'I':['ii','vi','IV'], 'vi':['IV','V'], 'ii':['V'], 'IV':['I','V']} },
-        country: { chords: ['I', 'IV', 'V'], next: {'I':['IV','V'], 'IV':['I','V'], 'V':['I']} },
-        edm: { chords: ['i', 'VI', 'III', 'VII'], next: {'i':['VI'], 'VI':['III'], 'III':['VII'], 'VII':['i']} },
-        funk: { chords: ['i', 'IV', 'v', 'bVII'], next: {'i':['IV','bVII'], 'IV':['i'], 'bVII':['i']} },
-        hiphop: { chords: ['i', 'iv', 'v', 'VI'], next: {'i':['iv','VI'], 'iv':['v','i'], 'VI':['v']} },
-        rnb: { chords: ['i7', 'ii7', 'IVmaj7', 'V7'], next: {'i7':['ii7','IVmaj7'], 'ii7':['V7'], 'V7':['i7']} }
+        pop: { chords: ['I', 'IV', 'V', 'vi'], next: {'I':['IV','V','vi'], 'vi':['IV','V'], 'IV':['I','V','vi'], 'V':['I','vi']} },
+        acoustic: { chords: ['I', 'ii', 'IV', 'V', 'vi'], next: {'I':['ii','vi','IV'], 'vi':['IV','V','ii'], 'ii':['V','IV'], 'IV':['I','V'], 'V':['I']} },
+        jazz: { chords: ['ii7', 'V7', 'Imaj7', 'vi7', 'III7', 'bII7'], next: {'ii7':['V7'], 'V7':['Imaj7','vi7'], 'Imaj7':['vi7','ii7'], 'vi7':['ii7','III7'], 'III7':['vi7'], 'bII7':['Imaj7']} },
+        edm: { chords: ['i', 'VI', 'III', 'VII'], next: {'i':['VI','VII'], 'VI':['III','VII'], 'III':['VII','i'], 'VII':['i','VI']} },
+        rnb: { chords: ['i7', 'iv7', 'v7', 'VImaj7', 'III7'], next: {'i7':['iv7','VImaj7'], 'iv7':['v7','i7'], 'v7':['i7'], 'VImaj7':['III7','i7']} },
+        epic: { chords: ['i', 'VI', 'bVII', 'v'], next: {'i':['VI','bVII'], 'VI':['bVII','i'], 'bVII':['i','v'], 'v':['i']} }
     };
 
-    // DEFAULTS WIE GEWÜNSCHT: Intro-Verse-Pre-Chorus-Bridge-Verse-Chorus-Ending
     let structure = [
-        {type:'Intro', bars:4}, {type:'Verse', bars:8}, {type:'Prechorus', bars:8}, 
-        {type:'Chorus', bars:8}, {type:'Bridge', bars:8}, {type:'Verse', bars:8}, 
-        {type:'Chorus', bars:8}, {type:'Ending', bars:4}
+        {type:'Intro', bars:4}, {type:'Verse', bars:8}, {type:'Chorus', bars:8}, {type:'Outro', bars:4}
     ];
 
-    let lastProgression = [];
+    let lastProgression = []; // Speichert Objekte: { name, midiNotes[], durationBars }
+    let audioCtx = null;
+    let activeOscillators = [];
 
+    // --- UI FUNCTIONS ---
     function renderStructure() {
         const list = document.getElementById('structure-list');
         list.innerHTML = '';
@@ -127,16 +146,11 @@
             const div = document.createElement('div');
             div.className = 'block-item';
             div.innerHTML = `
-                <select class="block-select" onchange="structure[${i}].type=this.value">
-                    <option ${b.type==='Intro'?'selected':''}>Intro</option>
-                    <option ${b.type==='Verse'?'selected':''}>Verse</option>
-                    <option ${b.type==='Prechorus'?'selected':''}>Prechorus</option>
-                    <option ${b.type==='Chorus'?'selected':''}>Chorus</option>
-                    <option ${b.type==='Bridge'?'selected':''}>Bridge</option>
-                    <option ${b.type==='Ending'?'selected':''}>Ending</option>
+                <select class="block-select" style="width:120px;" onchange="structure[${i}].type=this.value">
+                    ${['Intro','Verse','Prechorus','Chorus','Bridge','Solo','Outro'].map(t => `<option ${b.type===t?'selected':''}>${t}</option>`).join('')}
                 </select>
-                <input type="number" class="bars-input" value="${b.bars}" min="1" onchange="structure[${i}].bars=parseInt(this.value)">
-                <span style="font-size:13px; font-weight:bold; color: #64748b;">T.</span>
+                <input type="number" class="bars-input" value="${b.bars}" min="1" max="32" onchange="structure[${i}].bars=parseInt(this.value)">
+                <span style="font-size:13px; font-weight:600; color:#64748b;">Takte</span>
                 <div style="flex-grow:1"></div>
                 <button class="remove-btn" onclick="structure.splice(${i},1);renderStructure()">×</button>
             `;
@@ -144,20 +158,80 @@
         });
     }
 
-    function addBlock() { structure.push({type:'Verse', bars:8}); renderStructure(); }
+    function addBlock() { structure.push({type:'Verse', bars:4}); renderStructure(); }
 
-    function getChord(num, root, scale, comp) {
+    // --- GENERATION LOGIC ---
+    function getChordNotes(num, root, scale, comp) {
         let rootIdx = notes.indexOf(root);
-        let map = {'I':0,'ii':1,'iii':2,'IV':3,'V':4,'vi':5,'vii':6,'i':0,'III':2,'iv':3,'v':4,'VI':5,'VII':6,'bVII':6,'i7':0,'ii7':1,'IVmaj7':3,'V7':4};
-        let step = map[num.replace('maj7','').replace('7','')] || 0;
+        // Map Roman Numerals to Scale Steps
+        let map = {'I':0,'ii':1,'iii':2,'IV':3,'V':4,'vi':5,'vii':6, 'i':0,'bII':1,'ii7':1,'III':2,'III7':2,'iv':3,'iv7':3,'v':4,'v7':4,'VI':5,'VImaj7':5,'VII':6,'bVII':6,'i7':0,'Imaj7':0,'V7':4};
+        
+        let step = map[num.replace(/maj7|m7|7|sus4|dim/g,'')] || 0;
         let noteIdx = (rootIdx + scaleIntervals[scale][step]) % 12;
-        let offsets = [0, 4, 7]; let name = notes[noteIdx];
-        if ((scale==='major' && [1,2,5].includes(step)) || (scale==='minor' && [0,3,4].includes(step))) { name += "m"; offsets = [0,3,7]; }
+        
+        // Base Intervals (0=Root, 3/4=Third, 7=Fifth)
+        let offsets = [0, 4, 7]; 
+        let name = notes[noteIdx];
+        
+        // Bestimme Moll/Dur/Vermindert basierend auf Skala
+        let isMinor = (scale==='major' && [1,2,5,6].includes(step)) || (scale==='minor' && [0,3,4].includes(step));
+        let isDim = (scale==='major' && step===6) || (scale==='minor' && step===1);
+
+        if (isMinor) { offsets = [0, 3, 7]; name += "m"; }
+        if (isDim) { offsets = [0, 3, 6]; name += "dim"; }
+
+        // Komplexität hinzufügen
         if (comp >= 2) { 
-            if(num.includes('maj') || (scale==='major' && [0,3].includes(step))) { name += "maj7"; offsets.push(11); }
-            else { name += "7"; offsets.push(10); }
+            // 7th
+            if(num.includes('maj') || (scale==='major' && [0,3].includes(step)) || (scale==='minor' && [2,5].includes(step))) {
+                offsets.push(11); name = name.replace('m','m').replace('dim','m7b5') + (name.includes('m')?'(maj7)':'maj7');
+                // Korrektur für saubere Namen
+                if(name.endsWith('m(maj7)')) name = name.replace('(maj7)','7'); 
+                if(!name.includes('m') && !name.includes('maj')) name += "maj7";
+            } else {
+                offsets.push(10); // Minor 7th
+                if(!name.includes('7')) name += "7";
+            }
         }
-        return { name, offsets, rootIdx: noteIdx };
+        if (comp >= 3) {
+            offsets.push(14); // 9th
+            name = name.replace('7', '9');
+        }
+
+        return { name, intervals: offsets, rootBaseIndex: noteIdx };
+    }
+
+    // Smart Voice Leading: Wählt Inversionen so, dass Töne nah beieinander bleiben
+    function optimizeVoicing(currentNotes, prevNotes) {
+        if (!prevNotes || prevNotes.length === 0) return currentNotes;
+
+        // Versuche 3 Inversionen (-1 Oktave, Standard, +1 Oktave)
+        // Einfache Heuristik: Durchschnittliche Tonhöhe
+        const avg = arr => arr.reduce((a,b)=>a+b,0) / arr.length;
+        const target = avg(prevNotes);
+
+        let bestFit = currentNotes;
+        let minDiff = Infinity;
+
+        // Prüfe Inversionen (Note shifts)
+        // Wir schieben den ganzen Akkord in 12er Schritten bis er nah am vorherigen ist
+        let testNotes = currentNotes.map(n => n); // Copy
+        
+        // Normalisiere in die mittlere Oktave (z.B. 48-60)
+        let center = testNotes.map(n => (n % 12) + 60); // C4 Bereich
+        
+        // Finde Oktav-Verschiebung die am nächsten am Vorgänger liegt
+        let shifts = [-12, 0, 12];
+        shifts.forEach(shift => {
+            let candidate = center.map(n => n + shift);
+            let diff = Math.abs(avg(candidate) - target);
+            if (diff < minDiff) {
+                minDiff = diff;
+                bestFit = candidate;
+            }
+        });
+
+        return bestFit;
     }
 
     function generate() {
@@ -165,78 +239,174 @@
         const root = document.getElementById('rootNote').value;
         const scale = document.getElementById('scaleType').value;
         const comp = document.getElementById('complexity').value;
-        
-        let txt = ""; lastProgression = [];
+
+        let txt = ""; 
+        lastProgression = [];
+        let prevMidiNotes = []; // Für Voice Leading
+
         structure.forEach(b => {
-            txt += `[${b.type.toUpperCase()}]\n| `;
-            let cur = genreRules[gen].chords[0];
+            txt += `\n[${b.type.toUpperCase()}]\n| `;
+            let curRoman = genreRules[gen].chords[0];
+            
             for(let i=0; i<b.bars; i++) {
-                let c = getChord(cur, root, scale, comp);
-                txt += c.name + " | "; lastProgression.push(c);
-                let pool = genreRules[gen].next[cur] || genreRules[gen].chords;
-                cur = pool[Math.floor(Math.random()*pool.length)];
+                // Akkord-Daten holen
+                let c = getChordNotes(curRoman, root, scale, comp);
+                
+                // MIDI Noten berechnen (Basis Oktave 3 = 48)
+                let rawMidi = c.intervals.map(int => c.rootBaseIndex + int + 48); // Start in tiefer Oktave
+                
+                // Voice Leading anwenden
+                let smoothMidi = (lastProgression.length === 0) 
+                    ? rawMidi.map(n => n + 12) // Erster Akkord höher (C4 Bereich)
+                    : optimizeVoicing(rawMidi, prevMidiNotes);
+
+                lastProgression.push({
+                    name: c.name,
+                    midi: smoothMidi,
+                    bars: 1, // Wir machen 1 Akkord pro Takt für Einfachheit
+                    type: b.type
+                });
+
+                prevMidiNotes = smoothMidi;
+                txt += c.name.padEnd(6) + " | ";
+
+                // Nächster Akkord (Markov)
+                let pool = genreRules[gen].next[curRoman] || genreRules[gen].chords;
+                curRoman = pool[Math.floor(Math.random()*pool.length)];
             }
-            txt += "\n\n";
+            txt += "\n";
         });
 
-        document.getElementById('output').innerText = txt;
+        document.getElementById('output').innerText = txt.trim();
         document.getElementById('output').style.display = 'block';
         document.getElementById('action-buttons').style.display = 'flex';
         document.getElementById('workflow-hint').style.display = 'block';
+        document.getElementById('btnPlay').disabled = false;
+        
+        stopPreview(); // Falls was läuft
     }
 
-    // BIT-PERFEKTER MIDI GENERATOR (Format 0)
+    // --- MIDI EXPORT (Verbessert) ---
     function exportMidi() {
         if (!lastProgression.length) return;
+        
+        const humanize = document.getElementById('humanize').checked;
+        
+        // Standard MIDI File Format 0
+        // Header Chunk
+        let bytes = [0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0]; // 480 PPQ
 
-        const TPQ = 128; // Ticks per quarter note
-        const barTicks = TPQ * 4;
+        // Track Chunk Header Placeholder
+        let trackHead = [0x4D, 0x54, 0x72, 0x6B];
+        let trackEvents = [];
 
-        // MIDI Header: 'MThd', length 6, format 0, 1 track, division TPQ
-        let bytes = [0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x00, 0x80];
+        // Tempo (120 BPM = 500,000 micros) -> FF 51 03 07 A1 20
+        trackEvents.push(0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20);
 
-        // Track Chunk: 'MTrk'
-        let trackData = [];
-
-        // Set Tempo: Meta event 0xFF 0x51 0x03 (500,000 msq / 120 BPM)
-        trackData.push(0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20);
+        const TICKS_PER_BAR = 480 * 4; // 1920 Ticks
 
         lastProgression.forEach(chord => {
-            let chordMidiNotes = chord.offsets.map(o => chord.rootIdx + o + 48); // Octave 3 (C3 = 60)
-
-            // Note ON events (chord)
-            chordMidiNotes.forEach((n, i) => {
-                trackData.push(0x00); // Delta time 0
-                trackData.push(0x90, n, 0x64); // Status 0x90 (Note On ch 1), Note, Velocity 100
+            // Note ON
+            chord.midi.forEach((note, idx) => {
+                let velocity = 90; 
+                let delta = 0;
+                
+                // Humanize: Leichtes Strumming (Arpeggio) und Velocity Variation
+                if(humanize) {
+                    velocity = 80 + Math.floor(Math.random() * 30);
+                    // Ganz kleiner Versatz für "Strum" Effekt (Delta > 0)
+                    if(idx > 0) delta = 5 + Math.floor(Math.random() * 10); 
+                }
+                
+                trackEvents.push(...toVLQ(delta)); // Delta
+                trackEvents.push(0x90, note, velocity);
             });
 
-            // Note OFF events (after 1 bar)
-            // VLQ for duration (barTicks = 512 -> 0x84 0x00)
-            trackData.push(0x84, 0x00); // Delta time for FIRST Note Off
-            trackData.push(0x80, chordMidiNotes[0], 0x00); // Note Off
+            // Note OFF (Dauer = 1 Bar minus Strumming offset)
+            // Wir setzen die Dauer beim ERSTEN Note-Off Event.
+            // Achtung: VLQ Logik muss stimmen.
+            let duration = TICKS_PER_BAR;
+            
+            // Wenn wir strummen, müssen wir die Ticks abziehen, die wir schon verbraucht haben
+            let usedTicks = humanize ? (chord.midi.length - 1) * 10 : 0; // grob geschätzt
+            let firstDuration = duration - usedTicks;
 
-            // Remaining Notes in Chord (Delta 0)
-            for (let j = 1; j < chordMidiNotes.length; j++) {
-                trackData.push(0x00, 0x80, chordMidiNotes[j], 0x00);
-            }
+            chord.midi.forEach((note, idx) => {
+                let delta = (idx === 0) ? firstDuration : 0;
+                trackEvents.push(...toVLQ(delta));
+                trackEvents.push(0x80, note, 0x00);
+            });
         });
 
-        // End of track meta event
-        trackData.push(0x00, 0xFF, 0x2F, 0x00);
+        // End of Track
+        trackEvents.push(0x00, 0xFF, 0x2F, 0x00);
 
-        // MTrk Header + Length
-        let trackLength = trackData.length;
-        bytes.push(0x4D, 0x54, 0x72, 0x6B);
-        bytes.push((trackLength >> 24) & 0xFF, (trackLength >> 16) & 0xFF, (trackLength >> 8) & 0xFF, trackLength & 0xFF);
-        bytes = bytes.concat(trackData);
+        // Länge berechnen und alles zusammenfügen
+        let len = trackEvents.length;
+        let lenBytes = [(len >> 24) & 0xFF, (len >> 16) & 0xFF, (len >> 8) & 0xFF, len & 0xFF];
+        
+        let fileBytes = new Uint8Array([...bytes, ...trackHead, ...lenBytes, ...trackEvents]);
 
-        const blob = new Blob([new Uint8Array(bytes)], {type: 'audio/midi'});
+        const blob = new Blob([fileBytes], {type: 'audio/midi'});
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = "akkordfolge.mid";
+        a.download = `progression_${Date.now()}.mid`;
         a.click();
-        setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    // Helper: Variable Length Quantity für MIDI
+    function toVLQ(num) {
+        let buffer = [num & 0x7F];
+        while (num >>= 7) buffer.push((num & 0x7F) | 0x80);
+        return buffer.reverse();
+    }
+
+    // --- AUDIO PREVIEW (Web Audio API) ---
+    async function playPreview() {
+        if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if(audioCtx.state === 'suspended') await audioCtx.resume();
+
+        document.getElementById('btnPlay').style.display = 'none';
+        document.getElementById('btnStop').style.display = 'flex';
+
+        let now = audioCtx.currentTime;
+        let beatTime = 0.5; // Schnelles Preview Tempo (120BPM Half-time feel)
+        
+        lastProgression.forEach((chord, i) => {
+            let start = now + (i * beatTime * 4); // 4 Beats pro Akkord
+            let duration = beatTime * 4;
+
+            chord.midi.forEach((note, nIdx) => {
+                let osc = audioCtx.createOscillator();
+                let gain = audioCtx.createGain();
+                
+                osc.type = 'triangle'; // Weicherer Sound als Sine/Square
+                osc.frequency.value = 440 * Math.pow(2, (note - 69) / 12);
+                
+                // Hüllkurve (ADSR-ish)
+                gain.gain.setValueAtTime(0, start);
+                gain.gain.linearRampToValueAtTime(0.1, start + 0.05); // Attack
+                gain.gain.exponentialRampToValueAtTime(0.001, start + duration - 0.05); // Decay
+                
+                osc.connect(gain);
+                gain.connect(audioCtx.destination);
+                
+                osc.start(start);
+                osc.stop(start + duration);
+                activeOscillators.push(osc);
+            });
+        });
+
+        // Auto-Reset Button nach Ende
+        setTimeout(stopPreview, (lastProgression.length * 4 * beatTime * 1000) + 200);
+    }
+
+    function stopPreview() {
+        activeOscillators.forEach(o => { try{o.stop();}catch(e){} });
+        activeOscillators = [];
+        document.getElementById('btnPlay').style.display = 'flex';
+        document.getElementById('btnStop').style.display = 'none';
     }
 
     function copyText() {
@@ -244,7 +414,7 @@
         t.value = document.getElementById('output').innerText;
         document.body.appendChild(t); t.select();
         document.execCommand('copy'); document.body.removeChild(t);
-        alert("Text für BiaB kopiert!");
+        alert("In Zwischenablage kopiert!");
     }
 
     window.onload = renderStructure;
